@@ -1,26 +1,149 @@
 @import "tailwindcss";
 
+@theme {
+  /* Paleta da marca (§23 do briefing + azul extraído do logo). */
+  --color-midnight: #0a051e;
+  --color-midnight-deep: #050211;
+  --color-electric: #1743f4;
+  --color-deep: #002aa6;
+  --color-bone: #f8f6f5;
+
+  --font-display: var(--font-archivo), "Arial Narrow", sans-serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+
+  /* Curvas: entrada rápida com saída longa — sensação de câmera, não de UI. */
+  --ease-cinema: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-whip: cubic-bezier(0.7, 0, 0.2, 1);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: dark;
+  --ink: 248 246 245;
+  --shell-x: 6vw;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@media (min-width: 1024px) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --shell-x: 5rem;
   }
 }
 
+html {
+  scroll-behavior: smooth;
+  background-color: var(--color-midnight-deep);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-midnight-deep);
+  color: var(--color-bone);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background-color: var(--color-electric);
+  color: #fff;
+}
+
+/* Foco visível e consistente — o site é escuro, o anel precisa ser o azul da marca. */
+:focus-visible {
+  outline: 2px solid var(--color-electric);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+@layer utilities {
+  /* Respiro horizontal padrão de todas as seções. */
+  .shell {
+    padding-inline: var(--shell-x);
+  }
+
+  /* Display pesado e condensado, casando com o wordmark do logo. */
+  .type-display {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    line-height: 0.92;
+    text-wrap: balance;
+  }
+
+  .type-eyebrow {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.6875rem;
+    letter-spacing: 0.4em;
+    text-transform: uppercase;
+  }
+
+  /* Grão de filme estático. Disfarça o hero em 720p e o banding dos gradientes.
+     feTurbulence renderizado uma vez como data URI: zero custo por frame. */
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Escurece as bordas e concentra o olhar no centro do quadro. */
+  .vignette::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 90% at 50% 45%,
+      transparent 30%,
+      rgb(5 2 17 / 0.55) 72%,
+      rgb(5 2 17 / 0.92) 100%
+    );
+  }
+
+  /* Grade cromática comum a todas as fotos do pool. Os masters vêm com temperaturas
+     muito diferentes (LED magenta vs. estúdio quente); isto os traz para o mesmo sistema. */
+  .pool-grade {
+    filter: saturate(0.8) contrast(1.06) brightness(0.92);
+  }
+
+  .pool-tint::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-color: var(--color-electric);
+    mix-blend-mode: color;
+    opacity: 0.18;
+  }
+
+  .hairline {
+    border-color: rgb(var(--ink) / 0.12);
+  }
+}
+
+@keyframes hint {
+  0% {
+    transform: translateX(-100%);
+  }
+  60%,
+  100% {
+    transform: translateX(300%);
+  }
+}
+
+/* Ninguém deve enjoar navegando. Zoom, parallax e trocas rápidas saem de cena. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
