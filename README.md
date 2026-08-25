@@ -66,11 +66,14 @@ vinheta, grão e gradiente, o que faz a suavidade ler como cinematográfica em v
 resolução. Para melhorar de verdade, regere no Veo em 1080p+ com o prompt do §4 do
 briefing e substitua o arquivo — nada no código muda.
 
-**Logos.** Os SVGs originais eram auto-vetorizados (160–330 KB, milhares de micro-paths) e
-foram descartados. O pipeline recorta o vazio dos PNGs 1080×1080 e exporta WebP de ~23 KB
-em 1x/2x. O selo circular (`fsb-reduzida-*`) traz **"STORYTELLIHC"** no anel externo, um
-erro do arquivo original — por isso ele só aparece grande e apagado como textura de fundo.
-**Corrija na fonte antes de qualquer uso impresso.**
+**Logos.** Masters corrigidos em `logos/logo-{principal,reduzida}-{claro,escuro}.png` e
+`logos/logo-icone{,-anel}.png` (sem texto) — o erro antigo de digitação no anel do selo
+("STORYTELLIHC") já não existe. O pipeline recorta o vazio dos PNGs e exporta WebP de
+1x/2x, como antes. `fsb-icone.svg` é vetor de verdade (não auto-trace bruto): a arte do
+ícone é chapada (7 lâminas + triângulo, sem gradiente), então dá pra tracejar com paleta
+fixa sem o problema de milhares de micro-paths que os SVGs auto-vetorizados antigos
+tinham — ficou em ~5 KB, 9 paths. O wordmark completo (com texto) continua só WebP: texto
+traçado a partir de raster sai ruim, então não vale a pena.
 
 ### Imagens bloqueadas
 
