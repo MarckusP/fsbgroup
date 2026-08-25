@@ -18,7 +18,6 @@ export const pt: Dictionary = {
     words: ["EVENTOS", "ANIVERSÁRIOS", "MARCAS", "PRODUTOS", "EXPERIÊNCIAS"],
     signature: ["EXPERIÊNCIAS QUE FICAM.", "MARCAS QUE CRESCEM."],
     scrollHint: "Role para escolher",
-    intro: { skip: "Pular abertura", loading: "Carregando a abertura" },
   },
   paths: {
     eyebrow: "Escolha o seu caminho",

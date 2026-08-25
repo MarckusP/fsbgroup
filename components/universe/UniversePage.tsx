@@ -31,12 +31,7 @@ function buildSections(universe: Universe, dict: Dictionary): StageSection[] {
   }));
 }
 
-/**
- * Página real de /company e /events (substitui a antiga `SoonScreen`).
- *
- * Sem `Curtain`/`IntroProvider`: essas páginas não têm abertura em vídeo, então o
- * conteúdo pode simplesmente existir — nada para revelar depois de um trailer.
- */
+/** Página real de /company e /events (substitui a antiga `SoonScreen`). */
 export function UniversePage({
   universe,
   dict,

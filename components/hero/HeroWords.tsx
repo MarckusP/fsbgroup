@@ -3,7 +3,6 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { Dictionary } from "@/lib/dictionaries";
-import { useIntro } from "./IntroProvider";
 
 const WORD_MS = 700;
 
@@ -16,17 +15,14 @@ const WORD_MS = 700;
 export function HeroWords({ dict }: { dict: Dictionary }) {
   const { words, signature } = dict.hero;
   const reduceMotion = useReducedMotion();
-  const { revealed } = useIntro();
   const [index, setIndex] = useState(0);
   const done = index >= words.length;
 
-  // A sequência só começa quando a abertura devolve a tela: sem isto ela queima
-  // inteira por trás da cortina e a pessoa chega no site com o hero já parado.
   useEffect(() => {
-    if (reduceMotion || done || !revealed) return;
+    if (reduceMotion || done) return;
     const timer = setTimeout(() => setIndex((i) => i + 1), WORD_MS);
     return () => clearTimeout(timer);
-  }, [index, done, reduceMotion, revealed]);
+  }, [index, done, reduceMotion]);
 
   if (reduceMotion) {
     return (

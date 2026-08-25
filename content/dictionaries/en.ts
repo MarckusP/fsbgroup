@@ -17,7 +17,6 @@ export const en: Dictionary = {
     words: ["EVENTS", "ANNIVERSARIES", "BRANDS", "PRODUCTS", "EXPERIENCES"],
     signature: ["EXPERIENCES THAT LAST.", "BRANDS THAT GROW."],
     scrollHint: "Scroll to choose",
-    intro: { skip: "Skip intro", loading: "Loading the intro" },
   },
   paths: {
     eyebrow: "Choose your path",

@@ -74,16 +74,6 @@ export default async function LocaleLayout({
       lang={HTML_LANG[lang as Locale]}
       className={`${archivo.variable} ${inter.variable}`}
     >
-      <head>
-        {/* Sem JS a abertura nunca termina, e a página inteira ficaria em opacity-0.
-            O conteúdo já está no HTML servido — aqui só devolvemos a visibilidade. */}
-        <noscript>
-          <style>{
-            "[data-curtain]{opacity:1!important;transform:none!important}" +
-            "[data-intro-curtain]{display:none!important}"
-          }</style>
-        </noscript>
-      </head>
       <body>{children}</body>
     </html>
   );

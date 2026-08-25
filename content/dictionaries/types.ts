@@ -65,11 +65,6 @@ export type Dictionary = {
     /** Frase-assinatura da marca (§28), em duas linhas. */
     readonly signature: readonly [string, string];
     readonly scrollHint: string;
-    /** Abertura em tela cheia (§3): o vídeo toca sozinho antes da página montar. */
-    readonly intro: {
-      readonly skip: string;
-      readonly loading: string;
-    };
   };
   readonly paths: {
     readonly eyebrow: string;
