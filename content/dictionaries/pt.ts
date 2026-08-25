@@ -12,12 +12,13 @@ export const pt: Dictionary = {
     skipToContent: "Ir para o conteúdo",
     home: "Início",
     localeLabel: "Idioma",
+    back: "Voltar para a home",
   },
   hero: {
     words: ["EVENTOS", "ANIVERSÁRIOS", "MARCAS", "PRODUTOS", "EXPERIÊNCIAS"],
     signature: ["EXPERIÊNCIAS QUE FICAM.", "MARCAS QUE CRESCEM."],
     scrollHint: "Role para escolher",
-    sound: { enable: "Ativar som", disable: "Desativar som" },
+    intro: { skip: "Pular abertura", loading: "Carregando a abertura" },
   },
   paths: {
     eyebrow: "Escolha o seu caminho",
@@ -83,20 +84,108 @@ export const pt: Dictionary = {
     rights: "Todos os direitos reservados.",
     logoAlt: "FSB Production",
   },
-  soon: {
-    badge: "Em breve",
-    back: "Voltar para a home",
-    events: {
-      title: "EVENTS",
-      text:
-        "Estamos montando o universo Events: casamentos, debutantes, aniversários, " +
-        "corporativos, DJ, LED, fotografia, filmagem e pós-produção.",
+  events: {
+    eyebrow: "EVENTS",
+    title: "EVENTOS QUE VIRAM MEMÓRIA.",
+    intro:
+      "Do primeiro brief à última luz apagada, cuidamos de cada camada do seu evento — " +
+      "cenografia, som, imagem e experiência.",
+    formTypeLabel: "Tipo de evento",
+    sections: {
+      weddings: {
+        navLabel: "Casamentos",
+        eyebrow: "CASAMENTOS",
+        title: "O dia mais importante, contado do jeito certo.",
+        description:
+          "Planejamos e registramos casamentos do primeiro ensaio à festa — cenografia, " +
+          "iluminação, som e um time de imagem dedicado a não perder nenhum instante.",
+        cta: "Falar sobre meu casamento",
+      },
+      socials: {
+        navLabel: "Social",
+        eyebrow: "DEBUTANTES & ANIVERSÁRIOS",
+        title: "Celebrações com a assinatura FSB.",
+        description:
+          "Debutantes, aniversários e comemorações que merecem tanto cuidado quanto " +
+          "qualquer grande produção — do convite ao último brinde.",
+        cta: "Planejar minha celebração",
+      },
+      corporate: {
+        navLabel: "Corporativo",
+        eyebrow: "CORPORATIVO",
+        title: "Eventos que comunicam a sua marca.",
+        description:
+          "Convenções, lançamentos e confraternizações pensados como experiência de " +
+          "marca — cada detalhe reforça a mensagem que sua empresa quer deixar.",
+        cta: "Falar sobre meu evento corporativo",
+      },
+      production: {
+        navLabel: "Produção",
+        eyebrow: "PRODUÇÃO AUDIOVISUAL",
+        title: "DJ, LED, fotografia e filmagem — tudo integrado.",
+        description:
+          "Som, iluminação, telões de LED, fotografia e filmagem sob uma única produção, " +
+          "para o evento parecer — e soar — profissional do início ao fim.",
+        cta: "Montar minha produção",
+      },
     },
-    company: {
-      title: "COMPANY",
-      text:
-        "Estamos montando o universo Company: branding, campanhas, conteúdo, " +
-        "fotografia e vídeo de produto, cursos, e-books, sites e tecnologia.",
+  },
+  company: {
+    eyebrow: "COMPANY",
+    title: "IDEIAS QUE VIRAM NEGÓCIO.",
+    intro:
+      "Da identidade visual ao produto pronto para vender: unimos criatividade, " +
+      "tecnologia e produção para fazer sua marca crescer.",
+    formTypeLabel: "Tipo de projeto",
+    sections: {
+      branding: {
+        navLabel: "Branding",
+        eyebrow: "BRANDING & CAMPANHAS",
+        title: "Marca com identidade, campanha com resultado.",
+        description:
+          "Construímos identidade visual, posicionamento e campanhas que fazem sua " +
+          "marca ser lembrada — e não só vista.",
+        cta: "Falar sobre minha marca",
+      },
+      product: {
+        navLabel: "Produto",
+        eyebrow: "FOTO & VÍDEO DE PRODUTO",
+        title: "Seu produto, em estúdio, pronto para vender.",
+        description:
+          "Fotografia e vídeo de produto em estúdio ou locação — imagens pensadas para " +
+          "catálogo, e-commerce e campanha.",
+        cta: "Agendar produção de produto",
+      },
+      content: {
+        navLabel: "Conteúdo",
+        eyebrow: "CURSOS & E-BOOKS",
+        title: "Conteúdo que educa e vende.",
+        description:
+          "Gravação de cursos, criação de e-books e conteúdo educativo com produção de " +
+          "ponta a ponta — do roteiro à entrega final.",
+        cta: "Criar meu conteúdo",
+      },
+      web: {
+        navLabel: "Web",
+        eyebrow: "SITES & TECNOLOGIA",
+        title: "Presença digital que sustenta o negócio.",
+        description:
+          "Sites, plataformas e soluções digitais desenhadas para durar — tecnologia a " +
+          "serviço da experiência da sua marca.",
+        cta: "Falar sobre tecnologia",
+      },
     },
+  },
+  form: {
+    eyebrow: "Vamos conversar",
+    title: "Conte pra gente o que você quer criar.",
+    name: "Nome",
+    namePlaceholder: "Seu nome",
+    date: "Data do evento",
+    email: "E-mail (opcional)",
+    emailPlaceholder: "seu@email.com",
+    details: "Detalhes (opcional)",
+    detailsPlaceholder: "Convidados, local, orçamento — o que for relevante.",
+    cta: "Falar no WhatsApp",
   },
 };

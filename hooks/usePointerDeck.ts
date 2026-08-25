@@ -1,10 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { LAYER_COUNT, type PoolImage } from "@/content/media-pool";
+import { LAYER_COUNT, type PoolItem } from "@/content/media-pool";
+
+/** Identidade de um item para o dedup do baralho: `.mp4` para vídeo, `.src` para imagem. */
+const identity = (item: PoolItem) => (item.kind === "video" ? item.mp4 : item.src);
 
 /** Distância acumulada do cursor, em px, que dispara a troca de imagem. */
-const SWAP_DISTANCE = 90;
+const SWAP_DISTANCE = 120;
 /** Amplitude do parallax, em px, na camada mais profunda. */
 const PARALLAX_RANGE = 26;
 /** Suavização do parallax por frame (0–1). Baixo = câmera pesada. */
@@ -15,7 +18,7 @@ const AUTOPLAY_MS = 2600;
 export type DeckLayer = {
   /** Cresce sempre; serve de key e garante animação de entrada em cada troca. */
   readonly id: number;
-  readonly image: PoolImage;
+  readonly media: PoolItem;
   /** Vetor unitário do movimento do cursor no instante da troca. */
   readonly dx: number;
   readonly dy: number;
@@ -47,7 +50,7 @@ export function usePointerDeck({
   pool,
   enabled,
 }: {
-  pool: readonly PoolImage[];
+  pool: readonly PoolItem[];
   enabled: boolean;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -61,19 +64,19 @@ export function usePointerDeck({
   const heading = useRef({ x: 0, y: -1 });
   const frame = useRef(0);
 
-  const deck = useRef<PoolImage[]>([]);
+  const deck = useRef<PoolItem[]>([]);
   const counter = useRef(0);
   // Guardado em ref, não lido de `layers`: assim `draw` e `push` ficam estáveis e o
   // loop de rAF não é destruído e recriado a cada troca de imagem.
   const lastSrc = useRef<string | null>(null);
 
-  const draw = useCallback((): PoolImage => {
+  const draw = useCallback((): PoolItem => {
     if (deck.current.length === 0) {
       const reshuffled = shuffle(pool);
-      // Evita que a última imagem exibida reapareça logo na virada do baralho.
+      // Evita que o último item exibido reapareça logo na virada do baralho.
       if (
         reshuffled.length > 1 &&
-        reshuffled[reshuffled.length - 1].src === lastSrc.current
+        identity(reshuffled[reshuffled.length - 1]) === lastSrc.current
       ) {
         [reshuffled[0], reshuffled[reshuffled.length - 1]] = [
           reshuffled[reshuffled.length - 1],
@@ -82,21 +85,21 @@ export function usePointerDeck({
       }
       deck.current = reshuffled;
     }
-    const image = deck.current.pop() as PoolImage;
-    lastSrc.current = image.src;
-    return image;
+    const media = deck.current.pop() as PoolItem;
+    lastSrc.current = identity(media);
+    return media;
   }, [pool]);
 
   const push = useCallback(
-    (dx: number, dy: number, forced?: PoolImage) => {
+    (dx: number, dy: number, forced?: PoolItem) => {
       const id = ++counter.current;
-      const image = forced ?? draw();
-      if (forced) lastSrc.current = forced.src;
+      const media = forced ?? draw();
+      if (forced) lastSrc.current = identity(forced);
       setLayers((prev) =>
         [
           {
             id,
-            image,
+            media,
             dx,
             dy,
             // Alterna o lado da inclinação para o empilhamento não ficar simétrico demais.
@@ -156,6 +159,8 @@ export function usePointerDeck({
       // Ao sair, devolve o parallax ao repouso.
       node?.style.setProperty("--pdx", "0px");
       node?.style.setProperty("--pdy", "0px");
+      node?.style.setProperty("--pnx", "0");
+      node?.style.setProperty("--pny", "0");
       return;
     }
 
@@ -171,6 +176,10 @@ export function usePointerDeck({
         "--pdy",
         `${(current.current.y * PARALLAX_RANGE).toFixed(2)}px`,
       );
+      // As mesmas coordenadas sem unidade (-0.5…0.5). O card multiplica por `deg` para
+      // inclinar em 3D — o tilt sai de graça deste loop, sem um segundo rAF.
+      node.style.setProperty("--pnx", current.current.x.toFixed(4));
+      node.style.setProperty("--pny", current.current.y.toFixed(4));
 
       if (travelled.current >= SWAP_DISTANCE) {
         travelled.current = 0;

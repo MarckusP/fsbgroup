@@ -5,6 +5,8 @@
  * quebra o build — as traduções não saem de sincronia em silêncio.
  */
 
+import type { CompanySection, EventsSection } from "@/content/media-pool";
+
 export const LOCALES = ["pt", "en"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "pt";
@@ -25,6 +27,27 @@ export type PathCopy = {
   readonly cta: string;
 };
 
+/** Copy de uma seção dentro de /company ou /events (a "página" que a barra lateral abre). */
+export type SectionCopy = {
+  /** Rótulo curto para a barra lateral — o `eyebrow` completo é longo demais pra coluna estreita. */
+  readonly navLabel: string;
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly description: string;
+  readonly cta: string;
+};
+
+/** Copy de um universo inteiro (/company ou /events): cabeçalho + uma `SectionCopy` por seção. */
+export type UniverseCopy<Section extends string> = {
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly intro: string;
+  /** Rótulo do campo "tipo" do formulário de contato — "Tipo de evento" em Events,
+   *  "Tipo de projeto" em Company. */
+  readonly formTypeLabel: string;
+  readonly sections: Record<Section, SectionCopy>;
+};
+
 export type Dictionary = {
   readonly meta: {
     readonly title: string;
@@ -34,6 +57,7 @@ export type Dictionary = {
     readonly skipToContent: string;
     readonly home: string;
     readonly localeLabel: string;
+    readonly back: string;
   };
   readonly hero: {
     /** Palavras que piscam sobre o vídeo (§2). */
@@ -41,9 +65,10 @@ export type Dictionary = {
     /** Frase-assinatura da marca (§28), em duas linhas. */
     readonly signature: readonly [string, string];
     readonly scrollHint: string;
-    readonly sound: {
-      readonly enable: string;
-      readonly disable: string;
+    /** Abertura em tela cheia (§3): o vídeo toca sozinho antes da página montar. */
+    readonly intro: {
+      readonly skip: string;
+      readonly loading: string;
     };
   };
   readonly paths: {
@@ -77,11 +102,22 @@ export type Dictionary = {
     readonly rights: string;
     readonly logoAlt: string;
   };
-  /** Telas provisórias de /events e /company. */
-  readonly soon: {
-    readonly badge: string;
-    readonly back: string;
-    readonly events: { readonly title: string; readonly text: string };
-    readonly company: { readonly title: string; readonly text: string };
+  /** Conteúdo real de /events — barra lateral + colunas de cada seção. */
+  readonly events: UniverseCopy<EventsSection>;
+  /** Conteúdo real de /company — barra lateral + colunas de cada seção. */
+  readonly company: UniverseCopy<CompanySection>;
+  /** Formulário de contato (encaminha pro WhatsApp) em /company e /events. */
+  readonly form: {
+    readonly eyebrow: string;
+    readonly title: string;
+    readonly name: string;
+    readonly namePlaceholder: string;
+    /** Único outro campo obrigatório, junto com o nome. */
+    readonly date: string;
+    readonly email: string;
+    readonly emailPlaceholder: string;
+    readonly details: string;
+    readonly detailsPlaceholder: string;
+    readonly cta: string;
   };
 };

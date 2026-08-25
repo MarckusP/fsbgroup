@@ -19,6 +19,7 @@ const OUT = path.join(ROOT, "public", "media");
 const FORCE = process.argv.includes("--force");
 
 const IMAGE_EXT = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+const VIDEO_EXT = new Set([".mp4"]);
 const MAX_WIDTH = 1400; // não faz upscale: só limita os poucos masters gigantes
 const WEBP_QUALITY = "80";
 
@@ -27,7 +28,24 @@ const RENAME = {
   "events- photographer": "events-photographer-press",
   "company-brand-campaings": "company-brand-campaigns",
   "company-campanhas-publicitarioas": "company-campanhas-publicitarias",
+  "company-web-desing-1": "company-web-design-1",
+  "company-web-desing-2": "company-web-design-2",
+  "company-web-desing3": "company-web-design-3",
 };
+
+/**
+ * Clipes do baralho (só a camada da frente vira vídeo — ver CardLayerStack).
+ *
+ * 0.3s de entrada (evita o frame preto/fade que várias masters têm no corte) e no
+ * máximo 6s de loop: é ambiente, não conteúdo principal, e um loop curto se percebe
+ * como "vivo" sem pesar. Sem áudio — a camada nunca é a única fonte de som da página.
+ */
+const CLIP_START = "0.3";
+const CLIP_MAX_SECONDS = "6";
+/** Maior lado em 960px. As masters são majoritariamente retrato (720×1280 de Reels);
+ *  o card as corta com object-cover, então a resolução da still já é generosa. */
+const CLIP_SCALE =
+  "scale='if(gt(iw,ih),min(960,iw),-2)':'if(gt(iw,ih),-2,min(960,ih))'";
 
 function run(args, { capture = false } = {}) {
   const res = spawnSync(args[0], args.slice(1), {
@@ -167,6 +185,47 @@ function buildHero() {
   }
 }
 
+/* ------------------------------------------------------------------- film */
+
+/**
+ * Filme institucional (§16 do briefing) — vídeo grande logo abaixo da escolha de
+ * caminho na home. Ao contrário do hero, já chega pronto (sem marca d'água, já no
+ * enquadramento certo), então não precisa de delogo nem de recorte mobile — só
+ * gerar poster + derivados web, mesma lógica do hero.
+ */
+function buildFilm() {
+  console.log("\n▸ film");
+  const src = path.join(ROOT, "film", "fsb-institutional.mp4");
+  if (!existsSync(src)) {
+    console.log("  · pula (sem film/fsb-institutional.mp4)");
+    return;
+  }
+  const outDir = path.join(OUT, "film");
+  ensureDir(outDir);
+
+  const jobs = [
+    { name: "fsb-institutional-poster.webp",
+      args: ["-ss", "0.3", "-i", src, "-frames:v", "1", "-c:v", "libwebp",
+             "-quality", "82", "-compression_level", "6"] },
+    { name: "fsb-institutional.webm",
+      args: ["-i", src, "-c:v", "libvpx-vp9", "-crf", "32", "-b:v", "0",
+             "-row-mt", "1", "-deadline", "good", "-cpu-used", "2",
+             "-pix_fmt", "yuv420p", "-c:a", "libopus", "-b:a", "128k"] },
+    { name: "fsb-institutional.mp4",
+      args: ["-i", src, "-c:v", "libx264", "-crf", "23", "-preset", "slow",
+             "-profile:v", "high", "-pix_fmt", "yuv420p",
+             "-movflags", "+faststart", "-c:a", "aac", "-b:a", "160k"] },
+  ];
+
+  for (const job of jobs) {
+    const target = path.join(outDir, job.name);
+    if (skip(target)) continue;
+    process.stdout.write(`  … ${job.name}\r`);
+    run(["ffmpeg", "-y", "-v", "error", ...job.args, target]);
+    console.log(`  ✓ ${path.relative(ROOT, target)}`);
+  }
+}
+
 /* ----------------------------------------------------------------- stills */
 
 function buildStills(universe) {
@@ -195,12 +254,90 @@ function buildStills(universe) {
     }
 
     const { width, height } = probeSize(target);
-    entries.push({ src: `/media/${universe}/${base}.webp`, width, height });
+    entries.push({ kind: "image", src: `/media/${universe}/${base}.webp`, width, height });
+  }
+  return entries;
+}
+
+/* ----------------------------------------------------------------- clips */
+
+/**
+ * Masters de vídeo dos universos (§9: "isso é um produto vivo").
+ *
+ * Só a camada da FRENTE do baralho vira <video> — as demais ficam com o poster, senão
+ * o card chegaria a decodificar até 5 vídeos ao mesmo tempo à toa, já que o leque de
+ * trás é pequeno, girado e parcialmente coberto. Por isso todo clipe sai daqui com
+ * poster (para as camadas de trás e para o primeiro frame antes do vídeo bufferizar)
+ * MAIS webm/mp4 (para quando ele estiver na frente).
+ */
+function buildClips(universe) {
+  console.log(`\n▸ ${universe} (clipes)`);
+  const srcDir = path.join(ROOT, universe);
+  const outDir = path.join(OUT, universe);
+  ensureDir(outDir);
+
+  const entries = [];
+  const files = readdirSync(srcDir)
+    .filter((f) => VIDEO_EXT.has(path.extname(f).toLowerCase()))
+    .sort();
+
+  for (const file of files) {
+    const src = path.join(srcDir, file);
+    const raw = path.parse(file).name;
+    const base = RENAME[raw.trim()] ?? slugify(raw);
+
+    const poster = path.join(outDir, `${base}-poster.webp`);
+    if (!skip(poster)) {
+      run(["ffmpeg", "-y", "-v", "error", "-ss", CLIP_START, "-i", src,
+           "-vf", CLIP_SCALE, "-frames:v", "1", "-c:v", "libwebp",
+           "-quality", WEBP_QUALITY, "-compression_level", "6", poster]);
+      console.log(`  ✓ ${base}-poster.webp`);
+    }
+
+    const webm = path.join(outDir, `${base}.webm`);
+    if (!skip(webm)) {
+      process.stdout.write(`  … ${base}.webm\r`);
+      run(["ffmpeg", "-y", "-v", "error", "-ss", CLIP_START, "-i", src,
+           "-t", CLIP_MAX_SECONDS, "-vf", `${CLIP_SCALE},fps=30`, "-an",
+           "-c:v", "libvpx-vp9", "-crf", "36", "-b:v", "0", "-row-mt", "1",
+           "-deadline", "good", "-cpu-used", "2", "-pix_fmt", "yuv420p", webm]);
+      console.log(`  ✓ ${base}.webm`);
+    }
+
+    const mp4 = path.join(outDir, `${base}.mp4`);
+    if (!skip(mp4)) {
+      process.stdout.write(`  … ${base}.mp4\r`);
+      run(["ffmpeg", "-y", "-v", "error", "-ss", CLIP_START, "-i", src,
+           "-t", CLIP_MAX_SECONDS, "-vf", `${CLIP_SCALE},fps=30`, "-an",
+           "-c:v", "libx264", "-crf", "27", "-preset", "slow",
+           "-profile:v", "high", "-pix_fmt", "yuv420p",
+           "-movflags", "+faststart", mp4]);
+      console.log(`  ✓ ${base}.mp4`);
+    }
+
+    const { width, height } = probeSize(poster);
+    entries.push({
+      kind: "video",
+      poster: `/media/${universe}/${base}-poster.webp`,
+      webm: `/media/${universe}/${base}.webm`,
+      mp4: `/media/${universe}/${base}.mp4`,
+      width,
+      height,
+    });
   }
   return entries;
 }
 
 /* --------------------------------------------------------------- manifest */
+
+/** Serializa um PoolImage OU PoolVideo pelas próprias chaves — não precisa saber o kind. */
+function serializeEntry(item) {
+  const fields = Object.entries(item).map(
+    ([key, value]) =>
+      `${key}: ${typeof value === "string" ? JSON.stringify(value) : value}`,
+  );
+  return `  { ${fields.join(", ")} },`;
+}
 
 function writeManifest(pools) {
   const target = path.join(ROOT, "content", "media-pool.generated.ts");
@@ -208,23 +345,39 @@ function writeManifest(pools) {
 
   const body = Object.entries(pools)
     .map(([universe, items]) => {
-      const rows = items
-        .map((i) => `  { src: "${i.src}", width: ${i.width}, height: ${i.height} },`)
-        .join("\n");
-      return `export const ${universe}Pool: PoolImage[] = [\n${rows}\n];`;
+      const rows = items.map(serializeEntry).join("\n");
+      return `export const ${universe}Pool: PoolItem[] = [\n${rows}\n];`;
     })
     .join("\n\n");
 
   writeFileSync(
     target,
     `// GERADO por scripts/prepare-media.mjs — não editar à mão.
-// As dimensões vêm do arquivo real e alimentam width/height no <img>, evitando CLS.
+// As dimensões vêm do arquivo real e alimentam width/height, evitando CLS.
 
+/** Imagem estática do pool. */
 export type PoolImage = {
+  readonly kind: "image";
   readonly src: string;
   readonly width: number;
   readonly height: number;
 };
+
+/**
+ * Clipe do pool. Sem áudio de propósito — é decoração da camada da frente do baralho,
+ * nunca a única fonte de som da página. \`poster\` é o que as camadas de trás usam e o
+ * que aparece antes do vídeo bufferizar.
+ */
+export type PoolVideo = {
+  readonly kind: "video";
+  readonly poster: string;
+  readonly webm: string;
+  readonly mp4: string;
+  readonly width: number;
+  readonly height: number;
+};
+
+export type PoolItem = PoolImage | PoolVideo;
 
 ${body}
 `,
@@ -238,9 +391,10 @@ ${body}
 ensureDir(OUT);
 buildLogos();
 buildHero();
+buildFilm();
 const pools = {
-  events: buildStills("events"),
-  company: buildStills("company"),
+  events: [...buildStills("events"), ...buildClips("events")],
+  company: [...buildStills("company"), ...buildClips("company")],
 };
 writeManifest(pools);
 console.log(

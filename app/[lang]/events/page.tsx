@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { SoonScreen } from "@/components/sections/SoonScreen";
+import { UniversePage } from "@/components/universe/UniversePage";
 import { getDictionary, isLocale } from "@/lib/dictionaries";
 
 export async function generateMetadata({
@@ -12,10 +12,8 @@ export async function generateMetadata({
   if (!isLocale(lang)) return {};
   const dict = getDictionary(lang);
   return {
-    title: `${dict.soon.events.title} — ${dict.soon.badge}`,
-    description: dict.soon.events.text,
-    // Página ainda sem conteúdo real: não faz sentido indexar.
-    robots: { index: false, follow: true },
+    title: `${dict.events.title} — ${dict.meta.title}`,
+    description: dict.events.intro,
   };
 }
 
@@ -26,5 +24,5 @@ export default async function EventsPage({
 }) {
   const { lang } = await params;
   if (!isLocale(lang)) notFound();
-  return <SoonScreen dict={getDictionary(lang)} lang={lang} universe="events" />;
+  return <UniversePage dict={getDictionary(lang)} lang={lang} universe="events" />;
 }

@@ -20,7 +20,7 @@ export function FinalPaths({
         </h2>
       </Reveal>
 
-      <div className="grid gap-px bg-bone/10 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <FinalPathCard copy={dict.finalPaths.events} href={`/${lang}/events`} />
         <FinalPathCard
           copy={dict.finalPaths.company}
@@ -43,13 +43,12 @@ function FinalPathCard({
 }) {
   return (
     // O fundo opaco fica FORA do Reveal: o Reveal anima opacidade, e se ele carregasse
-    // o fundo, a célula ficaria transparente durante a entrada e deixaria vazar o
-    // cinza das linhas divisórias da grade.
-    <div className="bg-midnight-deep">
-      <Reveal delay={delay}>
+    // o fundo, a célula ficaria transparente durante a entrada.
+    <div className="h-full rounded-[24px] bg-midnight-deep">
+      <Reveal delay={delay} className="h-full">
         <Link
           href={href}
-          className="group flex h-full flex-col justify-between gap-10 p-8 transition-colors duration-500 hover:bg-electric/8 md:p-12"
+          className="group flex h-full flex-col justify-between gap-10 rounded-[24px] p-8 ring-1 ring-bone/10 transition duration-500 hover:-translate-y-1 hover:bg-electric/8 hover:ring-electric/40 md:p-12"
         >
           <div className="space-y-4">
             <h3 className="type-display text-[clamp(2rem,4.5vw,3.5rem)] text-bone transition-colors group-hover:text-electric">

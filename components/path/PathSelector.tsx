@@ -18,7 +18,10 @@ export function PathSelector({
         </p>
       </header>
 
-      <div className="flex flex-col gap-px bg-bone/10 md:flex-row">
+      {/* Com respiro dos dois lados o vídeo do hero aparece EM VOLTA dos cards — é o
+          que os faz ler como dois objetos soltos acima da página, e não como duas
+          metades dela. */}
+      <div className="shell grid gap-6 md:grid-cols-2 lg:gap-10">
         <PathCard
           universe="events"
           copy={dict.paths.events}
@@ -28,6 +31,7 @@ export function PathSelector({
           universe="company"
           copy={dict.paths.company}
           href={`/${lang}/company`}
+          floatDelay="-3.5s"
         />
       </div>
     </section>

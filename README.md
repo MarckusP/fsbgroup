@@ -1,12 +1,13 @@
 # FSB Production — site institucional
 
 Home cinematográfica em Next.js 16 (App Router) + TypeScript + Tailwind v4 + Motion.
-PT-BR e EN completos. `/events` e `/company` são telas provisórias "em breve".
+PT-BR e EN completos. `/events` e `/company` têm barra lateral de seções com grade de
+mídia em "liquid glass" (`components/universe/`).
 
 ```bash
 npm install
-npm run dev            # http://localhost:3000  → redireciona para /pt
-npm run build
+npm run dev             # http://localhost:3000/pt  (a raiz "/" só redireciona no build estático — ver Deploy)
+npm run build            # gera /out, pronto para publicar em qualquer host estático
 node scripts/prepare-media.mjs          # regera /public/media a partir dos masters
 node scripts/prepare-media.mjs --force  # refaz tudo, ignorando o que já existe
 ```
@@ -17,9 +18,37 @@ node scripts/prepare-media.mjs --force  # refaz tudo, ignorando o que já existe
 
 | # | Pendência | Onde |
 |---|---|---|
-| 1 | **Preencher contato e redes.** Tudo é placeholder marcado com `TODO:` | `content/site.ts` |
-| 2 | **Definir o domínio** (usado em metadata, OpenGraph e sitemap) | `content/site.ts` → `site.url` |
-| 3 | Revisar as exclusões de imagens da seção abaixo | `content/media-pool.ts` |
+| 1 | **Preencher contato e redes.** Tudo é placeholder marcado com `TODO:` — falta confirmar os links de Instagram/YouTube/LinkedIn/TikTok (por isso `Footer` mostra o nome sem link por enquanto) | `content/site.ts` |
+| 2 | Revisar as exclusões de imagens da seção abaixo | `content/media-pool.ts` |
+
+---
+
+## Deploy — GitHub Pages + domínio próprio
+
+O site é 100% estático (`output: "export"` em `next.config.ts`) — sem servidor Node, sem
+Proxy. Todo push em `main` roda `.github/workflows/deploy.yml`, que builda e publica
+`/out` no GitHub Pages automaticamente.
+
+**Configuração única no GitHub** (Settings → Pages): em "Build and deployment", escolher
+source **GitHub Actions** (não "Deploy from a branch"); em "Custom domain", preencher
+`portalfsb.com` e aguardar a verificação de DNS — o arquivo `public/CNAME` já garante que
+esse domínio viaja em todo build. Ativar "Enforce HTTPS" assim que o certificado ficar
+disponível (leva algumas horas após o DNS propagar).
+
+**DNS na HostGator** (zona de `portalfsb.com`): apontar o domínio raiz para os 4 IPs do
+GitHub Pages com registros **A**, e o `www` com **CNAME**:
+
+| Tipo | Host | Valor |
+|---|---|---|
+| A | @ | 185.199.108.153 |
+| A | @ | 185.199.109.153 |
+| A | @ | 185.199.110.153 |
+| A | @ | 185.199.111.153 |
+| CNAME | www | `<usuario>.github.io` |
+
+Sem servidor/Proxy, o redirecionamento de `/` para `/pt` ou `/en` (antes em `proxy.ts`,
+removido) agora é `public/index.html`: HTML estático puro, que lê `navigator.language` no
+cliente e cai em `/pt/` por padrão sem JS (`<meta http-equiv="refresh">`).
 
 ---
 
@@ -36,10 +65,6 @@ sem marca, apague a constante `DELOGO` em `scripts/prepare-media.mjs`.
 vinheta, grão e gradiente, o que faz a suavidade ler como cinematográfica em vez de baixa
 resolução. Para melhorar de verdade, regere no Veo em 1080p+ com o prompt do §4 do
 briefing e substitua o arquivo — nada no código muda.
-
-**Áudio de 10 s em loop.** O clipe tem whooshes marcados; com o som ligado, o loop fica
-repetitivo. Uma faixa ambiente dedicada de 60–90 s resolveria; a arquitetura do
-`SoundToggle` já aceita.
 
 **Logos.** Os SVGs originais eram auto-vetorizados (160–330 KB, milhares de micro-paths) e
 foram descartados. O pipeline recorta o vazio dos PNGs 1080×1080 e exporta WebP de ~23 KB
@@ -79,18 +104,41 @@ public/media/                   derivados web — o que o site consome
 scripts/prepare-media.mjs       ffmpeg: recorte, WebP, delogo, versões mobile, manifesto
 
 app/[lang]/                     /pt e /en, ambos estáticos
-proxy.ts                        "/" → /pt (Accept-Language como dica)
+public/index.html               "/" → /pt ou /en (navigator.language como dica)
+.github/workflows/deploy.yml    build + publish em GitHub Pages a cada push em main
 
 content/dictionaries/           types.ts é a fonte da verdade; pt.ts e en.ts são tipados
                                 contra ela, então chave faltando QUEBRA O BUILD
 content/media-pool.generated.ts inventário gerado (não editar)
-content/media-pool.ts           curadoria: ordem de exibição e lista de bloqueio
+content/media-pool.ts           curadoria: ordem de exibição, bloqueio e SEÇÃO
 content/site.ts                 contato, redes, caminhos de mídia
 
-components/hero/                CinemaBackdrop (vídeo fixo), HeroWords, SoundToggle
-components/path/                PathSelector, PathCard, CardLayerStack
-hooks/usePointerDeck.ts         movimento do cursor → sequência de imagens
+components/hero/                CinemaBackdrop (vídeo fixo, sem áudio), HeroWords
+components/path/                PathSelector, PathCard, CardLayerStack (home)
+components/universe/            UniversePage, UniverseStage, GlassMediaCard (/company e /events)
+hooks/usePointerDeck.ts         movimento do cursor → sequência de imagens (home)
+hooks/useSectionWheelNav.ts     scroll do mouse → troca de seção (/company e /events)
 ```
+
+### Seções de /company e /events
+
+Cada universo tem 4 seções fixas, que viram a barra de navegação lateral e agrupam a
+mídia da grade:
+
+| Universo | Seções |
+|---|---|
+| `events` | `weddings`, `socials`, `corporate`, `production` |
+| `company` | `branding`, `product`, `content`, `web` |
+
+Um master novo já nasce classificado se o nome seguir `<universo>-<seção>-<descrição>`
+— por exemplo `events-production-drone-shot.mp4` cai sozinho na seção `production` de
+Events, sem tocar em nenhum código. Isso é resolvido em `sectionOf()`
+(`content/media-pool.ts`), que olha o segundo token do nome do arquivo.
+
+Se o segundo token não bater com nenhuma seção da tabela acima (caso de quase todo o
+inventário atual, nomeado antes dessa convenção existir), o item precisa de uma entrada
+em `SECTION_OVERRIDES` no mesmo arquivo — mesmo padrão de `BLOCKED`/`FEATURED`. Sem uma
+entrada lá, o item simplesmente não aparece em nenhuma seção.
 
 ### Duas decisões que valem entender
 

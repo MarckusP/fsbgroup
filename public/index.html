@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <title>FSB Production</title>
+    <!-- Sem JS, cai no idioma padrão depois de 0s. Com JS, o script abaixo troca a
+         URL antes disso, então este refresh nunca chega a rodar. -->
+    <meta http-equiv="refresh" content="0; url=/pt/" />
+  </head>
+  <body>
+    <script>
+      (function () {
+        var locales = ["pt", "en"];
+        var preferred = (navigator.languages || [navigator.language || ""]).map(
+          function (tag) {
+            return tag.toLowerCase().split("-")[0];
+          },
+        );
+        var match = preferred.find(function (tag) {
+          return locales.indexOf(tag) !== -1;
+        });
+        location.replace("/" + (match || "pt") + "/");
+      })();
+    </script>
+  </body>
+</html>

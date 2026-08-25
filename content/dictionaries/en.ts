@@ -11,12 +11,13 @@ export const en: Dictionary = {
     skipToContent: "Skip to content",
     home: "Home",
     localeLabel: "Language",
+    back: "Back to home",
   },
   hero: {
     words: ["EVENTS", "ANNIVERSARIES", "BRANDS", "PRODUCTS", "EXPERIENCES"],
     signature: ["EXPERIENCES THAT LAST.", "BRANDS THAT GROW."],
     scrollHint: "Scroll to choose",
-    sound: { enable: "Turn sound on", disable: "Turn sound off" },
+    intro: { skip: "Skip intro", loading: "Loading the intro" },
   },
   paths: {
     eyebrow: "Choose your path",
@@ -82,20 +83,108 @@ export const en: Dictionary = {
     rights: "All rights reserved.",
     logoAlt: "FSB Production",
   },
-  soon: {
-    badge: "Coming soon",
-    back: "Back to home",
-    events: {
-      title: "EVENTS",
-      text:
-        "We are building the Events universe: weddings, debutante balls, birthdays, " +
-        "corporate events, DJ, LED, photography, filming and post-production.",
+  events: {
+    eyebrow: "EVENTS",
+    title: "EVENTS THAT BECOME MEMORIES.",
+    intro:
+      "From the first brief to the last light going out, we handle every layer of your " +
+      "event — set design, sound, imagery and experience.",
+    formTypeLabel: "Event type",
+    sections: {
+      weddings: {
+        navLabel: "Weddings",
+        eyebrow: "WEDDINGS",
+        title: "The most important day, told the right way.",
+        description:
+          "We plan and capture weddings from the first rehearsal to the last dance — set " +
+          "design, lighting, sound and an imagery team dedicated to missing nothing.",
+        cta: "Talk about my wedding",
+      },
+      socials: {
+        navLabel: "Social",
+        eyebrow: "DEBUTANTE BALLS & BIRTHDAYS",
+        title: "Celebrations with the FSB signature.",
+        description:
+          "Debutante balls, birthdays and celebrations that deserve as much care as any " +
+          "major production — from the invitation to the last toast.",
+        cta: "Plan my celebration",
+      },
+      corporate: {
+        navLabel: "Corporate",
+        eyebrow: "CORPORATE",
+        title: "Events that communicate your brand.",
+        description:
+          "Conventions, launches and gatherings designed as a brand experience — every " +
+          "detail reinforces the message your company wants to leave behind.",
+        cta: "Talk about my corporate event",
+      },
+      production: {
+        navLabel: "Production",
+        eyebrow: "AUDIOVISUAL PRODUCTION",
+        title: "DJ, LED, photography and filming — all integrated.",
+        description:
+          "Sound, lighting, LED walls, photography and filming under a single production, " +
+          "so the event looks — and sounds — professional from start to finish.",
+        cta: "Build my production",
+      },
     },
-    company: {
-      title: "COMPANY",
-      text:
-        "We are building the Company universe: branding, campaigns, content, " +
-        "product photography and video, courses, e-books, websites and technology.",
+  },
+  company: {
+    eyebrow: "COMPANY",
+    title: "IDEAS THAT BECOME BUSINESS.",
+    intro:
+      "From visual identity to a product ready to sell: we combine creativity, " +
+      "technology and production to help your brand grow.",
+    formTypeLabel: "Project type",
+    sections: {
+      branding: {
+        navLabel: "Branding",
+        eyebrow: "BRANDING & CAMPAIGNS",
+        title: "A brand with identity, a campaign with results.",
+        description:
+          "We build visual identity, positioning and campaigns that make your brand " +
+          "remembered — not just seen.",
+        cta: "Talk about my brand",
+      },
+      product: {
+        navLabel: "Product",
+        eyebrow: "PRODUCT PHOTO & VIDEO",
+        title: "Your product, in studio, ready to sell.",
+        description:
+          "Product photography and video in studio or on location — images built for " +
+          "catalog, e-commerce and campaign.",
+        cta: "Book a product shoot",
+      },
+      content: {
+        navLabel: "Content",
+        eyebrow: "COURSES & E-BOOKS",
+        title: "Content that educates and sells.",
+        description:
+          "Course recording, e-book creation and educational content with end-to-end " +
+          "production — from script to final delivery.",
+        cta: "Create my content",
+      },
+      web: {
+        navLabel: "Web",
+        eyebrow: "WEBSITES & TECHNOLOGY",
+        title: "Digital presence that supports the business.",
+        description:
+          "Websites, platforms and digital solutions built to last — technology in " +
+          "service of your brand's experience.",
+        cta: "Talk about technology",
+      },
     },
+  },
+  form: {
+    eyebrow: "Let's talk",
+    title: "Tell us what you want to create.",
+    name: "Name",
+    namePlaceholder: "Your name",
+    date: "Event date",
+    email: "Email (optional)",
+    emailPlaceholder: "you@email.com",
+    details: "Details (optional)",
+    detailsPlaceholder: "Guests, venue, budget — whatever's relevant.",
+    cta: "Talk on WhatsApp",
   },
 };

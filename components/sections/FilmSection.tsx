@@ -1,36 +1,35 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { heroMedia } from "@/content/site";
+import { Play } from "lucide-react";
+import { useRef, useState } from "react";
+import { filmMedia } from "@/content/site";
 import type { Dictionary } from "@/lib/dictionaries";
 import { Reveal } from "../ui/Reveal";
 
 /**
  * §16 — o filme institucional em formato grande.
  *
- * Por ora reaproveita o hero; quando existir o filme oficial, basta trocar o caminho
- * em content/site.ts. Só carrega e toca quando entra na tela: um segundo vídeo
- * rodando fora de vista é desperdício de bateria.
+ * Só toca por clique — nunca sozinho, nem na primeira vez nem nas seguintes. Ao
+ * terminar, volta pro primeiro frame e mostra o botão de novo: repetir também exige
+ * um clique.
  */
 export function FilmSection({ dict }: { dict: Dictionary }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [playing, setPlaying] = useState(false);
 
-  useEffect(() => {
+  const handlePlay = () => {
     const video = videoRef.current;
     if (!video) return;
+    video.muted = false;
+    setPlaying(true);
+    void video.play().catch(() => setPlaying(false));
+  };
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setVisible(entry.isIntersecting);
-        if (entry.isIntersecting) void video.play().catch(() => undefined);
-        else video.pause();
-      },
-      { threshold: 0.25 },
-    );
-    observer.observe(video);
-    return () => observer.disconnect();
-  }, []);
+  const handleEnded = () => {
+    const video = videoRef.current;
+    if (video) video.currentTime = 0;
+    setPlaying(false);
+  };
 
   return (
     <section className="shell relative z-10 bg-midnight-deep py-24 md:py-36">
@@ -46,21 +45,36 @@ export function FilmSection({ dict }: { dict: Dictionary }) {
           <video
             ref={videoRef}
             muted
-            loop
             playsInline
             preload="none"
-            poster={heroMedia.poster}
-            className={`h-full w-full object-cover transition-opacity duration-1000 ${
-              visible ? "opacity-100" : "opacity-70"
-            }`}
+            poster={filmMedia.poster}
+            controls={playing}
+            onEnded={handleEnded}
+            className="h-full w-full object-cover"
           >
-            <source src={heroMedia.webm} type="video/webm" />
-            <source src={heroMedia.mp4} type="video/mp4" />
+            <source src={filmMedia.webm} type="video/webm" />
+            <source src={filmMedia.mp4} type="video/mp4" />
           </video>
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-midnight-deep/60 to-transparent"
-          />
+
+          {!playing && (
+            <>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-0 bg-gradient-to-t from-midnight-deep/60 to-transparent"
+              />
+              <button
+                type="button"
+                onClick={handlePlay}
+                aria-label={dict.film.play}
+                title={dict.film.play}
+                className="group absolute inset-0 flex items-center justify-center bg-midnight-deep/10 transition hover:bg-midnight-deep/20"
+              >
+                <span className="hairline flex h-20 w-20 items-center justify-center rounded-full border bg-midnight-deep/60 text-bone backdrop-blur-md transition group-hover:border-electric group-hover:text-electric md:h-24 md:w-24">
+                  <Play className="h-8 w-8 translate-x-0.5" strokeWidth={1.5} />
+                </span>
+              </button>
+            </>
+          )}
         </div>
       </Reveal>
     </section>

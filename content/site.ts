@@ -16,15 +16,19 @@ export const site = {
   shortName: "FSB",
   foundedYear: 2023,
 
-  /** Usado em metadata/OpenGraph e no sitemap. */
-  url: "https://fsbproduction.com.br", // TODO: domínio definitivo
+  /** Usado em metadata/OpenGraph e no sitemap. Domínio próprio, DNS na HostGator
+   *  apontando pro GitHub Pages (ver README → Deploy). */
+  url: "https://portalfsb.com",
 
   contact: {
-    email: "contato@fsbproduction.com.br", // TODO
-    phoneLabel: "+55 (00) 00000-0000", // TODO
-    phoneHref: "tel:+550000000000", // TODO
-    whatsappHref: "https://wa.me/550000000000", // TODO
-    location: "Brasil", // TODO: cidade / estado
+    email: "institutofernandosanchez@gmail.com",
+    phoneLabel: "+1 (407) 686-8511",
+    phoneHref: "tel:+14076868511",
+    /** Mesmo número do telefone principal — o contato é encaminhado pelo WhatsApp. */
+    whatsappHref: "https://wa.me/14076868511",
+    location: "2295 S Hiawassee Rd, Ste 313, Orlando, FL 32835",
+    locationHref:
+      "https://www.google.com/maps/search/2295+S+Hiawassee+Rd,+Ste+313,+Orlando+FL+32835,+Estados+Unidos/@28.5178,-81.4819,17z?hl=pt-BR",
   },
 
   socials: [
@@ -42,6 +46,14 @@ export const heroMedia = {
   webm: "/media/hero/fsb-hero.webm",
   mp4: "/media/hero/fsb-hero.mp4",
   mp4Mobile: "/media/hero/fsb-hero-mobile.mp4",
+} as const;
+
+/** Filme institucional (§16), exibido em `FilmSection` — gerado por
+ *  scripts/prepare-media.mjs a partir de film/fsb-institutional.mp4. */
+export const filmMedia = {
+  poster: "/media/film/fsb-institutional-poster.webp",
+  webm: "/media/film/fsb-institutional.webm",
+  mp4: "/media/film/fsb-institutional.mp4",
 } as const;
 
 export const logos = {
