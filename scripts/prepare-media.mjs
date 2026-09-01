@@ -36,12 +36,17 @@ const RENAME = {
 /**
  * Clipes do baralho (só a camada da frente vira vídeo — ver CardLayerStack).
  *
- * 0.3s de entrada (evita o frame preto/fade que várias masters têm no corte) e no
- * máximo 6s de loop: é ambiente, não conteúdo principal, e um loop curto se percebe
- * como "vivo" sem pesar. Sem áudio — a camada nunca é a única fonte de som da página.
+ * 0.3s de entrada (evita o frame preto/fade que várias masters têm no corte) e o clipe
+ * INTEIRO daí em diante. O corte antigo em 6s vinha de quando estes clipes eram só
+ * ambiente atrás do baralho da home; na galeria em arco o vídeo em destaque é o conteúdo
+ * principal — em especial os walkthroughs de sites de clientes, que em 6s não davam tempo
+ * de mostrar nada. Sem áudio: a camada nunca é a única fonte de som da página.
+ *
+ * O custo em banda é contido pelo lado do site, não aqui: o `<video>` de um quadro do arco
+ * só é montado quando ele está em destaque (ver `GlassMediaCard`), então o navegador baixa
+ * um clipe por vez, sob demanda — os demais quadros são só o poster `.webp`.
  */
 const CLIP_START = "0.3";
-const CLIP_MAX_SECONDS = "6";
 /** Maior lado em 960px. As masters são majoritariamente retrato (720×1280 de Reels);
  *  o card as corta com object-cover, então a resolução da still já é generosa. */
 const CLIP_SCALE =
@@ -298,7 +303,7 @@ function buildClips(universe) {
     if (!skip(webm)) {
       process.stdout.write(`  … ${base}.webm\r`);
       run(["ffmpeg", "-y", "-v", "error", "-ss", CLIP_START, "-i", src,
-           "-t", CLIP_MAX_SECONDS, "-vf", `${CLIP_SCALE},fps=30`, "-an",
+           "-vf", `${CLIP_SCALE},fps=30`, "-an",
            "-c:v", "libvpx-vp9", "-crf", "36", "-b:v", "0", "-row-mt", "1",
            "-deadline", "good", "-cpu-used", "2", "-pix_fmt", "yuv420p", webm]);
       console.log(`  ✓ ${base}.webm`);
@@ -308,7 +313,7 @@ function buildClips(universe) {
     if (!skip(mp4)) {
       process.stdout.write(`  … ${base}.mp4\r`);
       run(["ffmpeg", "-y", "-v", "error", "-ss", CLIP_START, "-i", src,
-           "-t", CLIP_MAX_SECONDS, "-vf", `${CLIP_SCALE},fps=30`, "-an",
+           "-vf", `${CLIP_SCALE},fps=30`, "-an",
            "-c:v", "libx264", "-crf", "27", "-preset", "slow",
            "-profile:v", "high", "-pix_fmt", "yuv420p",
            "-movflags", "+faststart", mp4]);

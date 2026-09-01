@@ -65,7 +65,11 @@ export function UniversePage({
               Sem `justify-center`: o conteúdo começa colado no topo (logo abaixo da
               navbar) e é o espaço sobrando embaixo, antes do formulário, que absorve a
               diferença — centralizar teria empurrado o início pra baixo também. */}
-          <div className="flex min-h-svh flex-col gap-10">
+          {/* `calc(100svh - 5rem)`, não `min-h-svh`: este bloco começa DEPOIS do `pt-20`
+              do `main`, então uma altura de 100svh o faria terminar exatamente 5rem
+              abaixo da dobra — a página nascia rolável e o primeiro scroll revelava o
+              topo do formulário em vez de navegar a galeria. */}
+          <div className="flex min-h-[calc(100svh-5rem)] flex-col gap-10">
             <div className="flex flex-col items-start gap-4">
               <Link
                 href={`/${lang}`}
@@ -91,7 +95,7 @@ export function UniversePage({
               </Reveal>
             </div>
 
-            <UniverseStage sections={sections} />
+            <UniverseStage sections={sections} stage={dict.stage} />
           </div>
 
           <UniverseContactSection formTypeLabel={copy.formTypeLabel} form={dict.form} />

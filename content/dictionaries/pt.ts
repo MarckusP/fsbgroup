@@ -83,6 +83,14 @@ export const pt: Dictionary = {
     rights: "Todos os direitos reservados.",
     logoAlt: "FSB Production",
   },
+  stage: {
+    sections: "Seções",
+    gallery: "Galeria da seção",
+    showImage: "Ver imagem {n}",
+    openSite: "Abrir {host} em uma nova aba",
+    prevSection: "Seção anterior",
+    nextSection: "Próxima seção",
+  },
   events: {
     eyebrow: "EVENTS",
     title: "EVENTOS QUE VIRAM MEMÓRIA.",
@@ -138,39 +146,41 @@ export const pt: Dictionary = {
     formTypeLabel: "Tipo de projeto",
     sections: {
       branding: {
-        navLabel: "Branding",
-        eyebrow: "BRANDING & CAMPANHAS",
-        title: "Marca com identidade, campanha com resultado.",
+        navLabel: "Marca & Tráfego",
+        eyebrow: "MARCA, CAMPANHAS & TRÁFEGO",
+        title: "Marca com identidade, tráfego com resultado.",
         description:
-          "Construímos identidade visual, posicionamento e campanhas que fazem sua " +
-          "marca ser lembrada — e não só vista.",
+          "Identidade visual, posicionamento e campanhas — mais a gestão de redes " +
+          "sociais e do Google Meu Negócio que coloca sua empresa na frente de quem " +
+          "já está procurando.",
         cta: "Falar sobre minha marca",
       },
       product: {
-        navLabel: "Produto",
-        eyebrow: "FOTO & VÍDEO DE PRODUTO",
-        title: "Seu produto, em estúdio, pronto para vender.",
+        navLabel: "Foto & Vídeo",
+        eyebrow: "FOTOGRAFIA & VÍDEO",
+        title: "Seu produto, sua equipe e você em imagem.",
         description:
-          "Fotografia e vídeo de produto em estúdio ou locação — imagens pensadas para " +
-          "catálogo, e-commerce e campanha.",
-        cta: "Agendar produção de produto",
+          "Estúdio ou locação: foto de produto para catálogo e e-commerce, ensaio de " +
+          "modelo, retrato de posicionamento para empresários e o registro do dia a " +
+          "dia da empresa.",
+        cta: "Agendar uma produção",
       },
       content: {
         navLabel: "Conteúdo",
-        eyebrow: "CURSOS & E-BOOKS",
+        eyebrow: "CONTEÚDO, CURSOS & PODCAST",
         title: "Conteúdo que educa e vende.",
         description:
-          "Gravação de cursos, criação de e-books e conteúdo educativo com produção de " +
-          "ponta a ponta — do roteiro à entrega final.",
+          "Gravação de cursos e podcasts, criação de e-books e conteúdo educativo com " +
+          "produção de ponta a ponta — do roteiro à entrega final.",
         cta: "Criar meu conteúdo",
       },
       web: {
         navLabel: "Web",
-        eyebrow: "SITES & TECNOLOGIA",
+        eyebrow: "SITES, APPS & PRESENÇA DIGITAL",
         title: "Presença digital que sustenta o negócio.",
         description:
-          "Sites, plataformas e soluções digitais desenhadas para durar — tecnologia a " +
-          "serviço da experiência da sua marca.",
+          "Sites, aplicativos, Google Meu Negócio e as páginas que fazem sua empresa ser " +
+          "encontrada — tecnologia a serviço da experiência da marca.",
         cta: "Falar sobre tecnologia",
       },
     },

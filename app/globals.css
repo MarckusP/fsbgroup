@@ -18,6 +18,10 @@
      nos dois sentidos; `--ease-cinema` é assimétrica de propósito (feita pra reveals
      de uma via só) e fica abrupta na entrada quando usada num toggle de hover. */
   --ease-hover: cubic-bezier(0.4, 0, 0.2, 1);
+  /* Troca de quadro no arco: arranca devagar e desacelera longo. `--ease-hover` (padrão
+     de material) tem um começo rápido demais para um deslocamento grande — a mídia
+     central "pulava" de lugar em vez de deslizar. */
+  --ease-arc: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 :root {
@@ -185,9 +189,36 @@ body {
     filter: brightness(1.08);
   }
 
-  /* Cards vizinhos ao ativo: recuam para dar contraste ao card aberto na frente. */
-  .glass-dim {
-    filter: blur(1.5px) brightness(0.65) saturate(0.85);
+  /* Trilho do carrossel em arco (/company e /events): os pontos de luz sobre a linha
+     elíptica e os cubinhos de vidro nas pontas. Só decoração — a linha em si é o SVG
+     em `UniverseMediaArc`, que precisa ser esticado; isto aqui fica de fora dele
+     justamente pra não distorcer junto. */
+  .arc-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    translate: -50% -50%;
+    border-radius: 9999px;
+    background: rgb(var(--glass-tint) / 0.85);
+    box-shadow:
+      0 0 6px 1px rgb(var(--glass-tint) / 0.45),
+      0 0 14px 3px rgb(23 67 244 / 0.35);
+  }
+
+  .arc-cube {
+    filter: drop-shadow(0 6px 12px rgb(5 2 17 / 0.7)) drop-shadow(0 0 10px rgb(23 67 244 / 0.25));
+  }
+
+  /* Cascata de entrada dos quadros do arco de /company e /events, na primeira pintura
+     da página (a fita é montada uma vez só e não remonta ao trocar de seção).
+     Vai na MÍDIA de dentro do card, nunca na moldura de fora: aquela é reescrita a cada
+     frame pelo laço do arco (`applyFrame`), que sobrescreveria qualquer animação posta
+     ali. O atraso de cada quadro vem inline, calculado a partir da distância até o
+     destaque — a cena se monta do centro pra fora.
+     Só `opacity`/`transform`: `filter` aqui isolaria o `mix-blend-mode` de `.pool-tint`,
+     e o desfoque de profundidade já vem do `applyFrame` na moldura. */
+  .arc-card-in {
+    animation: arc-card-in 0.5s var(--ease-cinema) both;
   }
 
   /* Fundo ambiente cinematográfico de /company e /events — CSS puro, sem vídeo extra.
@@ -229,6 +260,17 @@ body {
 }
 
 /* Deriva lenta do glow de fundo em /company e /events — vivo, sem chamar atenção. */
+@keyframes arc-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes ambient-drift {
   0%,
   100% {
@@ -251,5 +293,9 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    /* Zerar só a duração não basta quando há cascata: `.arc-card-in` nasce com
+       `animation-fill-mode: both`, então um atraso de até 180ms manteria os quadros
+       invisíveis mesmo com a animação já instantânea. */
+    animation-delay: 0ms !important;
   }
 }

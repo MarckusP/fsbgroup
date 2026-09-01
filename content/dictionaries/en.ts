@@ -82,6 +82,14 @@ export const en: Dictionary = {
     rights: "All rights reserved.",
     logoAlt: "FSB Production",
   },
+  stage: {
+    sections: "Sections",
+    gallery: "Section gallery",
+    showImage: "Show image {n}",
+    openSite: "Open {host} in a new tab",
+    prevSection: "Previous section",
+    nextSection: "Next section",
+  },
   events: {
     eyebrow: "EVENTS",
     title: "EVENTS THAT BECOME MEMORIES.",
@@ -137,39 +145,41 @@ export const en: Dictionary = {
     formTypeLabel: "Project type",
     sections: {
       branding: {
-        navLabel: "Branding",
-        eyebrow: "BRANDING & CAMPAIGNS",
-        title: "A brand with identity, a campaign with results.",
+        navLabel: "Brand & Traffic",
+        eyebrow: "BRAND, CAMPAIGNS & TRAFFIC",
+        title: "A brand with identity, traffic with results.",
         description:
-          "We build visual identity, positioning and campaigns that make your brand " +
-          "remembered — not just seen.",
+          "Visual identity, positioning and campaigns — plus the social media and " +
+          "Google Business Profile management that put your company in front of the " +
+          "people already searching.",
         cta: "Talk about my brand",
       },
       product: {
-        navLabel: "Product",
-        eyebrow: "PRODUCT PHOTO & VIDEO",
-        title: "Your product, in studio, ready to sell.",
+        navLabel: "Photo & Video",
+        eyebrow: "PHOTOGRAPHY & VIDEO",
+        title: "Your product, your team and you, in image.",
         description:
-          "Product photography and video in studio or on location — images built for " +
-          "catalog, e-commerce and campaign.",
-        cta: "Book a product shoot",
+          "Studio or on location: product photography for catalog and e-commerce, " +
+          "model shoots, positioning portraits for business owners and the record of " +
+          "your company's day to day.",
+        cta: "Book a shoot",
       },
       content: {
         navLabel: "Content",
-        eyebrow: "COURSES & E-BOOKS",
+        eyebrow: "CONTENT, COURSES & PODCAST",
         title: "Content that educates and sells.",
         description:
-          "Course recording, e-book creation and educational content with end-to-end " +
-          "production — from script to final delivery.",
+          "Course and podcast recording, e-book creation and educational content with " +
+          "end-to-end production — from script to final delivery.",
         cta: "Create my content",
       },
       web: {
         navLabel: "Web",
-        eyebrow: "WEBSITES & TECHNOLOGY",
+        eyebrow: "WEBSITES, APPS & DIGITAL PRESENCE",
         title: "Digital presence that supports the business.",
         description:
-          "Websites, platforms and digital solutions built to last — technology in " +
-          "service of your brand's experience.",
+          "Websites, apps, Google Business Profile and the pages that make your company " +
+          "findable — technology in service of the brand experience.",
         cta: "Talk about technology",
       },
     },

@@ -97,6 +97,20 @@ export type Dictionary = {
     readonly rights: string;
     readonly logoAlt: string;
   };
+  /** Chrome de navegação do "stage" de /company e /events — igual nos dois universos,
+   *  por isso vive fora de `events`/`company`. */
+  readonly stage: {
+    /** `aria-label` da barra vertical de seções. */
+    readonly sections: string;
+    /** `aria-label` do carrossel em arco. */
+    readonly gallery: string;
+    /** `aria-label` de cada quadro do arco — `{n}` vira o número da imagem. */
+    readonly showImage: string;
+    /** `aria-label` do link para o site que o trabalho mostra — `{host}` vira o domínio. */
+    readonly openSite: string;
+    readonly prevSection: string;
+    readonly nextSection: string;
+  };
   /** Conteúdo real de /events — barra lateral + colunas de cada seção. */
   readonly events: UniverseCopy<EventsSection>;
   /** Conteúdo real de /company — barra lateral + colunas de cada seção. */

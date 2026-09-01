@@ -56,8 +56,6 @@ const BLOCKED: Record<string, string> = {
   "company-commercial-product-soda.mp4": "marca de terceiros em destaque",
   // Garrafa de tequila Don Julio em destaque, rótulo legível.
   "company-perfum-2.mp4": "marca de terceiros em destaque",
-  // Mockup de site com a marca real "Gcore" (cloud/CDN) visível na tela.
-  "company-web-design-3.mp4": "marca de terceiros em destaque",
   // Roupão com o nome do hotel bordado, legível — associa a FSB a uma rede real.
   "company-luxury-hotel-hospedagem.mp4": "marca de terceiros em destaque",
 };
@@ -144,6 +142,37 @@ export function sectionOf<U extends Universe>(
   return override as SectionOf<U> | undefined;
 }
 
+/**
+ * Sufixos de domínio reconhecidos no nome do arquivo, do mais específico para o menos —
+ * `com-br` tem que ser testado antes de `com`, senão `...-com-br` viraria `br.com`.
+ */
+const TLD_SUFFIXES = ["com-br", "com", "net", "org", "io", "app", "dev", "co"];
+
+/**
+ * Site que um item do pool representa, quando há um.
+ *
+ * Mesma filosofia de `sectionOf`: quem nomeia o master já classifica. Um clipe chamado
+ * `company-web-app-passoamerica.com.mp4` vira automaticamente um link para
+ * `https://passoamerica.com` — nenhuma lista para manter ao entregar um site novo.
+ *
+ * O pipeline (`slugify` em scripts/prepare-media.mjs) troca os pontos por hífen, então o
+ * domínio chega aqui como `...-passoamerica-com` e precisa ser remontado: o último token
+ * antes do sufixo é o nome do domínio, e o sufixo vira a extensão. Sem sufixo conhecido
+ * não há link — é assim que `company-web-app-nexora-conceitual` (peça conceitual, não um
+ * site no ar) e `company-web-app-mobile` ficam de fora sem precisar de exceção.
+ */
+export function siteOf(item: PoolItem): { host: string; href: string } | undefined {
+  const base = fileName(item).replace(/\.[a-z0-9]+$/, "");
+  const suffix = TLD_SUFFIXES.find((tld) => base.endsWith(`-${tld}`));
+  if (!suffix) return undefined;
+
+  const label = base.slice(0, -(suffix.length + 1)).split("-").pop();
+  if (!label) return undefined;
+
+  const host = `${label}.${suffix.replace(/-/g, ".")}`;
+  return { host, href: `https://${host}` };
+}
+
 /** Move os itens listados para o começo, preservando o resto na ordem original. */
 function promote(pool: readonly PoolItem[], featured: readonly string[]) {
   const rank = new Map(featured.map((name, index) => [name, index]));
@@ -170,8 +199,15 @@ const EVENTS_FEATURED = [
 const COMPANY_FEATURED = [
   "company-foto-produto-profissional-studio.webp",
   "company-maquiagem.webp",
-  // Idem — o card Company abre já mostrando um produto em movimento.
-  "company-web-design-1.mp4",
+  // Idem — o card Company abre já mostrando um trabalho em movimento (aqui, um site
+  // real entregue pela FSB, que ainda leva o link clicável em /company → web).
+  "company-web-app-passoamerica-com.mp4",
+  // Os outros sites reais entregues pela FSB. Ficam no topo porque a seção `web` tem 21
+  // itens e o arco só mostra os 9 primeiros — sem isto, justamente os trabalhos que
+  // levam link clicável ficariam de fora da galeria.
+  "company-web-app-kaminskilaw-com.mp4",
+  "company-web-app-paraisotropicalbr222-com-br.mp4",
+  "company-web-app-nexora-conceitual.mp4",
   "company-estudio-fotografico-modelo.webp",
   "company-food-image.webp",
   "company-gravacao-curso-3.webp",
