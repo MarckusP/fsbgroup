@@ -21,7 +21,7 @@ export const site = {
   url: "https://portalfsb.com",
 
   contact: {
-    email: "institutofernandosanchez@gmail.com",
+    email: "contact@portalfsb.com",
     phoneLabel: "+1 (407) 686-8511",
     phoneHref: "tel:+14076868511",
     /** Mesmo número do telefone principal — o contato é encaminhado pelo WhatsApp. */
