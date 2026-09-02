@@ -88,8 +88,6 @@ export const pt: Dictionary = {
     gallery: "Galeria da seção",
     showImage: "Ver imagem {n}",
     openSite: "Abrir {host} em uma nova aba",
-    prevSection: "Seção anterior",
-    nextSection: "Próxima seção",
   },
   events: {
     eyebrow: "EVENTS",

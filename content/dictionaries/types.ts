@@ -108,8 +108,6 @@ export type Dictionary = {
     readonly showImage: string;
     /** `aria-label` do link para o site que o trabalho mostra — `{host}` vira o domínio. */
     readonly openSite: string;
-    readonly prevSection: string;
-    readonly nextSection: string;
   };
   /** Conteúdo real de /events — barra lateral + colunas de cada seção. */
   readonly events: UniverseCopy<EventsSection>;

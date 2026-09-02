@@ -1,7 +1,15 @@
 "use client";
 
-import { useImperativeHandle, useLayoutEffect, useRef, type RefObject } from "react";
-import { siteOf, type PoolItem } from "@/content/media-pool";
+import {
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
+import type { PoolItem } from "@/content/media-pool";
 import { GlassMediaCard } from "./GlassMediaCard";
 
 /** Quantas imagens de cada seção entram na fita — e, portanto, quanto scroll a seção
@@ -41,8 +49,16 @@ export const arcItems = (media: readonly PoolItem[]) => media.slice(0, ARC_COUNT
  */
 const LOAD_WINDOW = 8;
 
-/** Deslocamento horizontal, em px, que conta como swipe (touch não dispara `wheel`). */
-const SWIPE_THRESHOLD = 40;
+/**
+ * Silêncio, em ms, antes de o quadro em destaque ganhar seu `<video>`.
+ *
+ * Sem esta espera, atravessar a fita monta um `<video autoplay>` NOVO a cada quadro que
+ * passa pelo centro — nove elementos de vídeo em menos de um segundo, cada um disparando
+ * rede e decode na thread principal. Era o engasgo da seção Web, que é toda de vídeo. Com a
+ * espera, quem passa vê só o poster (que já está lá, no mesmo quadro) e o vídeo entra
+ * quando a fita para.
+ */
+const VIDEO_SETTLE_MS = 160;
 
 /**
  * Caixa do arco: altura e `--arc-base`.
@@ -54,9 +70,10 @@ const SWIPE_THRESHOLD = 40;
  * formulário no meio da troca.
  *
  * A altura é limitada pelo que sobra da primeira tela, não só por um valor fixo: `100svh`
- * menos o cabeçalho da página, a faixa de seções, os vãos e os botões. Se o arco passar
- * disso, o stage inteiro deixa de caber no viewport e a mesma guarda devolve o scroll ao
- * navegador. `--arc-base` acompanha pelo mesmo fator (0.68 ≈ 1/1.47, a razão entre o
+ * menos o cabeçalho da página, a faixa de seções e os vãos. Se o arco passar disso, o stage
+ * inteiro deixa de caber no viewport e a mesma guarda devolve o scroll ao navegador. A
+ * reserva ficou FOLGADA desde que os botões de seção saíram — dá pra crescer o arco em telas
+ * baixas mexendo nos `32rem`/`34rem`, mas é decisão de layout, não consequência da remoção. `--arc-base` acompanha pelo mesmo fator (0.68 ≈ 1/1.47, a razão entre o
  * lado-base e a altura necessária para o retrato mais alto caber): encolher o container
  * sem encolher o card só faria o card ser recortado.
  */
@@ -189,18 +206,71 @@ export function UniverseMediaArc({
   openSiteLabel: string;
 }) {
   const cards = useRef<(HTMLDivElement | null)[]>([]);
-  const swipeStart = useRef<number | null>(null);
+  /** O destaque na montagem. `useState` sem setter, não `useRef`: é um valor DE render
+   *  (entra no cálculo de `openDelays`), só que capturado uma vez. */
+  const [firstActive] = useState(activeIndex);
+
+  // Um callback de ref FIXO por posição. Com um arrow novo a cada render, o React desanexa
+  // e reanexa os ~32 refs a cada mudança de quadro — e, junto com props instáveis, anula o
+  // `memo` de `GlassMediaCard`, fazendo a fita inteira re-renderizar durante o movimento.
+  const setCard = useMemo(
+    () =>
+      frames.map((_, index) => (node: HTMLDivElement | null) => {
+        cards.current[index] = node;
+      }),
+    [frames],
+  );
+
+  // Atraso da cascata de abertura, CONGELADO na montagem.
+  //
+  // Ele só tem efeito na primeira pintura, mas se fosse recalculado a partir do destaque
+  // atual mudaria para todo card a cada quadro que passa — e uma prop que muda em todos os
+  // ~32 cards a cada quadro anula o `memo` deles, que é justamente o que segura o custo do
+  // movimento.
+  const openDelays = useMemo(
+    () =>
+      frames.map(
+        (_, index) =>
+          Math.min(Math.abs(offsetFor(index, firstActive, frames.length)), VISIBLE_SIDE) *
+          60,
+      ),
+    [frames, firstActive],
+  );
+
+  // O vídeo só entra quando a fita para (ver `VIDEO_SETTLE_MS`).
+  const [videoIndex, setVideoIndex] = useState(activeIndex);
+  useEffect(() => {
+    const timer = setTimeout(() => setVideoIndex(activeIndex), VIDEO_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [activeIndex]);
 
   const applyFrame = (position: number) => {
     for (let index = 0; index < frames.length; index += 1) {
       const node = cards.current[index];
       if (!node) continue;
       const placement = placementFor(offsetFor(index, position, frames.length));
+
+      // Quadro fora da janela visível: esconde e NÃO escreve mais nada nele.
+      //
+      // Isto é o que devolveu o movimento a 60fps depois que a fita passou de 9 para ~32
+      // cards. `opacity: 0` sozinho não bastava: o card continua sendo pintado, e cada
+      // `.glass` carrega um `backdrop-filter: blur(22px)` — desfocar o fundo de 32
+      // elementos a cada frame é caro o suficiente para derrubar a taxa de quadros
+      // sozinho. `visibility: hidden` tira o card da pintura inteira, e pular as escritas
+      // de estilo evita invalidar 25 elementos por frame à toa.
+      if (placement.opacity <= 0.001) {
+        if (node.style.visibility !== "hidden") {
+          node.style.visibility = "hidden";
+          node.style.pointerEvents = "none";
+        }
+        continue;
+      }
+      node.style.visibility = "visible";
       node.style.left = `${placement.xPct}%`;
       node.style.top = `${placement.yPct}%`;
       node.style.zIndex = String(placement.z);
       node.style.opacity = String(placement.opacity);
-      node.style.pointerEvents = placement.opacity > 0 ? "auto" : "none";
+      node.style.pointerEvents = "auto";
       node.style.transform = `translate(-50%, -50%) rotate(${placement.rotate}deg) scale(${placement.scale})`;
       node.style.filter = `blur(${placement.blur}px) brightness(${placement.brightness})`;
     }
@@ -230,26 +300,13 @@ export function UniverseMediaArc({
         event.preventDefault();
         step(event.key === "ArrowRight" ? 1 : -1);
       }}
-      // Só o touch/caneta vira swipe: com o mouse, arrastar sobre um card é o começo de um
-      // clique, e tratá-lo como swipe roubaria o clique-para-centralizar.
-      onPointerDown={(event) => {
-        swipeStart.current = event.pointerType === "mouse" ? null : event.clientX;
-      }}
-      onPointerUp={(event) => {
-        const start = swipeStart.current;
-        swipeStart.current = null;
-        if (start === null) return;
-        const travel = event.clientX - start;
-        if (Math.abs(travel) < SWIPE_THRESHOLD) return;
-        step(travel < 0 ? 1 : -1);
-      }}
       // A altura, o `--arc-base` e o `overflow-hidden` vivem no wrapper persistente do
       // `UniverseStage` (ver `ARC_BOX`), não aqui: este elemento remonta a cada troca de
       // seção e a altura precisa sobreviver à troca. O recorte também é de lá — os quadros
       // das pontas ficam propositalmente perto da borda e sem ele vazariam por cima da
       // coluna de texto ao lado. (`overflow-hidden` no wrapper também é o que continua
       // impedindo `perspective`/`preserve-3d` aqui dentro.)
-      className="relative h-full w-full touch-pan-y select-none"
+      className="relative h-full w-full select-none"
     >
       {frames.map((frame, index) => {
         const distance = Math.abs(offsetFor(index, activeIndex, frames.length));
@@ -257,11 +314,11 @@ export function UniverseMediaArc({
         return (
           <GlassMediaCard
             key={item.kind === "video" ? item.mp4 : item.src}
-            ref={(node) => {
-              cards.current[index] = node;
-            }}
+            ref={setCard[index]}
             item={item}
+            index={index}
             featured={index === activeIndex}
+            playVideo={index === videoIndex}
             // Estado discreto (foco, `aria-hidden`, carregamento) sai do índice
             // arredondado, não da posição contínua: não faz sentido um quadro entrar e sair
             // da ordem de tabulação no meio de um gesto de scroll.
@@ -272,11 +329,10 @@ export function UniverseMediaArc({
             // esquerda para a direita: é no centro do arco que o olho está quando a página
             // abre. Limitada a `VISIBLE_SIDE` porque além disso o quadro já nasce invisível
             // (ver `placementFor`).
-            enterDelayMs={Math.min(distance, VISIBLE_SIDE) * 60}
+            enterDelayMs={openDelays[index]}
             label={imageLabel.replace("{n}", String(frame.numberInSection))}
-            site={siteOf(item)}
             openSiteLabel={openSiteLabel}
-            onSelect={() => onSelect(index)}
+            onSelect={onSelect}
           />
         );
       })}

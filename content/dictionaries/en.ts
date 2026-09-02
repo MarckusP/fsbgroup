@@ -87,8 +87,6 @@ export const en: Dictionary = {
     gallery: "Section gallery",
     showImage: "Show image {n}",
     openSite: "Open {host} in a new tab",
-    prevSection: "Previous section",
-    nextSection: "Next section",
   },
   events: {
     eyebrow: "EVENTS",

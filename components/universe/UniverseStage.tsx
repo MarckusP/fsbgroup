@@ -14,7 +14,6 @@ import {
   type ArcHandle,
 } from "./UniverseMediaArc";
 import { textBlockExit, textLine } from "./stageMotion";
-import { StageSectionControls } from "./StageSectionControls";
 import { UniverseSectionNav } from "./UniverseSectionNav";
 
 export type StageSection = {
@@ -36,17 +35,17 @@ export type StageSection = {
  *
  * - o estado é um número só (`frameIndex`), não mais um par seção+imagem;
  * - o arco NÃO remonta na troca de seção — remontá-lo é justamente o que cortava a fila;
- * - todo caminho de navegação vira o mesmo movimento: scroll, clique num quadro lateral,
+ * - todo caminho de navegação vira o mesmo movimento: scroll, arrasto do dedo, clique num
+ *   quadro lateral,
  *   botões de seção e a faixa de seções apenas pedem um alvo (`goTo`) e a fita desliza até
  *   lá. `frameIndex` é SAÍDA do laço, nunca entrada — ver a nota sobre o dono da posição em
  *   `useArcScrub`;
  * - só o TEXTO troca com corte suave (ver `stageMotion.ts`), quando o destaque cruza a
  *   fronteira entre duas seções.
  *
- * Regra de entrada numa seção nova pelos botões: pela ponta OPOSTA ao gesto — "próxima"
- * abre no primeiro quadro dela, "anterior" no último, de modo que inverter o sentido
- * devolve exatamente para onde se estava. Clicar na faixa de seções é um salto, não um
- * gesto direcional, então abre sempre no primeiro.
+ * A faixa de seções é o único atalho entre seções: clicar num rótulo é um salto para o
+ * primeiro quadro daquela seção, e a fita desliza até lá. Rolar e arrastar cobrem o resto,
+ * quadro a quadro.
  */
 export function UniverseStage({
   sections,
@@ -56,23 +55,22 @@ export function UniverseStage({
   stage: Dictionary["stage"];
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
+  const arcBoxRef = useRef<HTMLDivElement>(null);
   const arcRef = useRef<ArcHandle>(null);
   const reduceMotion = useReducedMotion();
 
   // A fita achatada, e os limites de cada seção dentro dela. `sections` vem de um Server
   // Component, então é estável entre renders do cliente.
-  const { frames, firstOf, lastOf } = useMemo(() => {
+  const { frames, firstOf } = useMemo(() => {
     const list: ArcFrame[] = [];
     const first: number[] = [];
-    const last: number[] = [];
     sections.forEach((section, sectionIndex) => {
       first[sectionIndex] = list.length;
       arcItems(section.media).forEach((item, indexInSection) => {
         list.push({ item, sectionIndex, numberInSection: indexInSection + 1 });
       });
-      last[sectionIndex] = list.length - 1;
     });
-    return { frames: list, firstOf: first, lastOf: last };
+    return { frames: list, firstOf: first };
   }, [sections]);
 
   const [frameIndex, setFrameIndex] = useState(0);
@@ -87,6 +85,7 @@ export function UniverseStage({
 
   const { goTo } = useArcScrub({
     containerRef: stageRef,
+    dragRef: arcBoxRef,
     frameCount: frames.length,
     onNavigate: setFrameIndex,
     onFrame: applyFrame,
@@ -102,17 +101,10 @@ export function UniverseStage({
     [reduce],
   );
 
-  const goSection = (delta: 1 | -1) => {
-    const next = sectionIndex + delta;
-    if (next < 0 || next >= sections.length) return;
-    goTo(delta > 0 ? firstOf[next] : lastOf[next]);
-  };
-
   return (
-    // O `ref` do wheel fica no wrapper, não na grade: os botões de seção estão fora dela
-    // (centralizados na página), e o scroll tem que continuar valendo com o cursor sobre
-    // eles também.
-    <div ref={stageRef} className="flex flex-col gap-12 lg:gap-14">
+    // O `ref` do wheel fica neste wrapper, e não na grade: é o retângulo dele que a guarda
+    // de `useArcScrub` mede para decidir entre mover a fita e devolver o scroll à página.
+    <div ref={stageRef}>
       <div className="grid gap-12 md:grid-cols-[1fr_1.9fr] md:gap-14 lg:grid-cols-[1fr_2fr] lg:gap-16">
         {/* `grid` com os dois blocos na MESMA célula (`gridArea: 1/1`) — não `absolute`:
             empilhados assim, a célula mede o mais alto dos dois durante a sobreposição e
@@ -168,7 +160,13 @@ export function UniverseStage({
           {/* A caixa carrega a altura, o `--arc-base` e o recorte (ver `ARC_BOX`), e
               hospeda o trilho junto do arco. Nada aqui remonta na troca de seção: é essa
               permanência que faz a fita ser contínua. */}
-          <div className={`relative overflow-hidden ${ARC_BOX}`}>
+          {/* `touch-action: none`: o arrasto do dedo sobre o arco é nosso (ver o bloco de
+              touch em `useArcScrub`). Sem isto o navegador começa a rolar a página antes
+              do primeiro `touchmove` e o gesto nunca chega ao carrossel. */}
+          <div
+            ref={arcBoxRef}
+            className={`relative touch-none overflow-hidden ${ARC_BOX}`}
+          >
             <ArcRail />
 
             <UniverseMediaArc
@@ -182,23 +180,6 @@ export function UniverseStage({
             />
           </div>
         </div>
-      </div>
-
-      {/* As margens negativas cancelam o padding do container da página (que é assimétrico
-          — `pl-[5vw] pr-[6vw]`, `lg:pl-12 lg:pr-20` em `UniversePage`). Sem elas os botões
-          ficariam centralizados na COLUNA de conteúdo, não na página, e o desencontro
-          aparecia como uns 24px de desvio para a esquerda. */}
-      <div className="-ml-[5vw] -mr-[6vw] lg:-ml-12 lg:-mr-20">
-        {/* Fora da grade de propósito: centralizado na largura inteira da página, não sob a
-          coluna da galeria. */}
-        <StageSectionControls
-          onPrev={() => goSection(-1)}
-          onNext={() => goSection(1)}
-          hasPrev={sectionIndex > 0}
-          hasNext={sectionIndex < sections.length - 1}
-          prevLabel={stage.prevSection}
-          nextLabel={stage.nextSection}
-        />
       </div>
     </div>
   );

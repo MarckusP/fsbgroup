@@ -1,8 +1,8 @@
 "use client";
 
 import { ArrowUpRight, Play } from "lucide-react";
-import type { RefCallback } from "react";
-import type { PoolItem } from "@/content/media-pool";
+import { memo, type RefCallback } from "react";
+import { siteOf, type PoolItem } from "@/content/media-pool";
 
 /** Raio da mídia interna — um pouco menor que o da moldura (`30px` em `.glass`),
  *  senão o "vidro" ao redor não lê como uma beirada. */
@@ -44,28 +44,38 @@ function sizeOf(item: PoolItem) {
  * propósito: ampliar acima de 1 borraria a moldura de vidro e a imagem justamente no
  * quadro que está sendo olhado de perto.
  *
+ * É `memo`: durante um movimento da fita o índice em destaque muda a cada quadro que passa
+ * pelo centro, e sem isso os ~32 cards re-renderizariam a cada um deles. Por isso as props
+ * são todas estáveis — `onSelect` recebe o `index` em vez de um arrow por card, o `site`
+ * é derivado aqui dentro em vez de vir pronto de fora, e o `ref` vem de uma lista fixa.
+ *
  * A moldura é um `<div>` com um `<button>` cobrindo a mídia, e não um `<button>` por fora
  * de tudo: o quadro em destaque pode carregar o link do site que ele mostra (`site`), e
  * `<a>` dentro de `<button>` é HTML inválido. Clicar no quadro o traz pro centro — o mesmo
  * caminho serve para teclado, para touch e para quem navega com `prefers-reduced-motion`
  * (onde o scroll do stage fica desligado).
  */
-export function GlassMediaCard({
+export const GlassMediaCard = memo(function GlassMediaCard({
   ref,
   item,
+  index,
   featured,
+  playVideo,
   reachable,
   loadMedia = true,
   eager = false,
   enterDelayMs = 0,
   label,
-  site,
   openSiteLabel,
   onSelect,
 }: {
   ref?: RefCallback<HTMLDivElement>;
   item: PoolItem;
+  /** Posição na fita — devolvida a `onSelect`, para o callback poder ser estável. */
+  index: number;
   featured: boolean;
+  /** O destaque já parou tempo bastante para valer a pena montar o `<video>`. */
+  playVideo: boolean;
   /** Está dentro da janela visível do arco — define foco e leitura por assistivos. */
   reachable: boolean;
   /** Está perto o bastante do destaque para valer a pena baixar a mídia. A fita inteira
@@ -75,16 +85,16 @@ export function GlassMediaCard({
   /** Atraso da cascata de entrada do arco, em ms — ver `.arc-card-in` no globals.css. */
   enterDelayMs?: number;
   label: string;
-  /** Site que este trabalho representa, quando o nome do master traz o domínio. */
-  site?: { host: string; href: string };
   /** Template do rótulo do link — `{host}` vira o domínio. */
   openSiteLabel: string;
-  onSelect: () => void;
+  onSelect: (index: number) => void;
 }) {
   const { aspect, width } = sizeOf(item);
+  /** Site que este trabalho representa, quando o nome do master traz o domínio. */
+  const site = siteOf(item);
   // No arco o destaque é o estado natural de "aberto", então é ele que toca o vídeo — na
   // galeria antiga isso era amarrado ao hover, que aqui não seleciona nada.
-  const asVideo = item.kind === "video" && featured;
+  const asVideo = item.kind === "video" && playVideo;
   const posterSrc = item.kind === "video" ? item.poster : item.src;
 
   return (
@@ -161,7 +171,7 @@ export function GlassMediaCard({
           type="button"
           aria-label={label}
           disabled={!reachable}
-          onClick={onSelect}
+          onClick={() => onSelect(index)}
           style={{ cursor: featured ? "default" : "pointer" }}
           className="absolute inset-0 z-20"
         />
@@ -183,7 +193,7 @@ export function GlassMediaCard({
       </div>
     </div>
   );
-}
+});
 
 /**
  * O vídeo do quadro em destaque, sobreposto ao poster.
