@@ -161,11 +161,12 @@ export function UniverseStage({
               hospeda o trilho junto do arco. Nada aqui remonta na troca de seção: é essa
               permanência que faz a fita ser contínua. */}
           {/* `touch-action: none`: o arrasto do dedo sobre o arco é nosso (ver o bloco de
-              touch em `useArcScrub`). Sem isto o navegador começa a rolar a página antes
-              do primeiro `touchmove` e o gesto nunca chega ao carrossel. */}
+              pointer em `useArcScrub`). Sem isto o navegador começa a rolar a página antes
+              do primeiro `touchmove` e o gesto nunca chega ao carrossel. `cursor-grab` só
+              avisa quem usa mouse que o arco também se arrasta com o botão. */}
           <div
             ref={arcBoxRef}
-            className={`relative touch-none overflow-hidden ${ARC_BOX}`}
+            className={`relative touch-none overflow-hidden cursor-grab active:cursor-grabbing ${ARC_BOX}`}
           >
             <ArcRail />
 

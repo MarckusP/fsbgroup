@@ -4,9 +4,9 @@ import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef } from 
 
 /** Pixels de scroll que equivalem a andar um quadro inteiro. */
 const WHEEL_PER_SLOT = 170;
-/** O mesmo, para o dedo. Menor que o do wheel: um arrasto é um movimento direto, e exigir
- *  os 170px do mouse faria a fita parecer pesada na mão. */
-const TOUCH_PER_SLOT = 115;
+/** O mesmo, para o arrasto direto (dedo ou mouse). Menor que o do wheel: um arrasto é um
+ *  movimento direto, e exigir os 170px faria a fita parecer pesada na mão. */
+const DRAG_PER_SLOT = 115;
 /** Movimento acumulado, em px, antes de decidir se o arrasto é vertical ou horizontal. */
 const AXIS_LOCK = 8;
 /** Fração da distância restante percorrida a cada frame — o "arrasto" do movimento. */
@@ -56,13 +56,16 @@ const EPSILON = 0.0004;
  * 2. Nas duas pontas da fita (primeiro quadro subindo, último descendo) o evento volta pro
  *    navegador — a página nunca fica presa no stage.
  *
- * No TOUCH o gesto é outro, e por isso tem um caminho próprio (`dragRef`, o quadro do arco):
- * `wheel` não existe ali, e a régua da guarda 1 — "só pega o scroll quando o stage inteiro
- * couber na tela" — nunca fecharia num celular, onde o stage é mais alto que a tela. Então
- * o arco é tratado como o que ele é: um objeto que se arrasta. O dedo sobre ele conduz a
- * fita (pra cima ou pra esquerda avança), e o resto da página rola normalmente. Chegando a
- * uma ponta da fita, o mesmo dedo passa a levar a PÁGINA, sem soltar o gesto e sem prender
- * ninguém no carrossel.
+ * No ARRASTO DIRETO (dedo no touch, botão do mouse no desktop) o gesto é outro, e por isso
+ * tem um caminho próprio (`dragRef`, o quadro do arco): `wheel` não existe no touch, e a
+ * régua da guarda 1 — "só pega o scroll quando o stage inteiro couber na tela" — nunca
+ * fecharia num celular, onde o stage é mais alto que a tela. Então o arco é tratado como o
+ * que ele é: um objeto que se arrasta. O ponteiro sobre ele conduz a fita (pra cima ou pra
+ * esquerda avança), e o resto da página rola normalmente. Chegando a uma ponta da fita, o
+ * mesmo gesto passa a levar a PÁGINA, sem soltar o gesto e sem prender ninguém no
+ * carrossel. Pointer Events (não touch/mouse separados) é o que unifica dedo, mouse e
+ * caneta no mesmo caminho, com `setPointerCapture` garantindo que soltar fora do quadro
+ * ainda encerre o gesto.
  */
 export function useArcScrub({
   containerRef,
@@ -171,35 +174,45 @@ export function useArcScrub({
       loop();
     };
 
-    /* --- arrasto (touch) ---------------------------------------------------------- */
+    /* --- arrasto (pointer: dedo, mouse ou caneta) ---------------------------------- */
 
     let lastX = 0;
     let lastY = 0;
     let travelX = 0;
     let travelY = 0;
     let axis: "x" | "y" | null = null;
+    let dragging = false;
+    /** Ponteiro que está conduzindo o gesto — ignora qualquer outro que aparecer no meio
+     *  (ex.: segundo dedo tocando a tela sem soltar o primeiro). */
+    let activePointerId: number | null = null;
 
-    const onTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      lastX = touch.clientX;
-      lastY = touch.clientY;
+    const onPointerDown = (event: PointerEvent) => {
+      // Só o botão principal do mouse arrasta — direito/meio seguem livres para o menu
+      // de contexto e outros usos. Touch e caneta não têm este conceito (`button` é 0).
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      // Suprime o drag-and-drop nativo de imagem que o mousedown dispararia por cima
+      // deste gesto — sem isto o navegador arrasta um "fantasma" da mídia junto da fita.
+      event.preventDefault();
+      dragging = true;
+      activePointerId = event.pointerId;
+      lastX = event.clientX;
+      lastY = event.clientY;
       travelX = 0;
       travelY = 0;
       axis = null;
+      // Mantém o gesto vivo mesmo se o ponteiro sair do retângulo do arco antes de soltar.
+      drag?.setPointerCapture(event.pointerId);
     };
 
-    const onTouchMove = (event: TouchEvent) => {
-      if (!live.current.enabled) return;
-      const touch = event.touches[0];
-      if (!touch) return;
+    const onPointerMove = (event: PointerEvent) => {
+      if (!dragging || !live.current.enabled || event.pointerId !== activePointerId) return;
 
       // Positivo = avança na fita: arrastar pra CIMA (como rolar a página pra baixo) ou
       // pra ESQUERDA (como empurrar o carrossel).
-      const stepX = lastX - touch.clientX;
-      const stepY = lastY - touch.clientY;
-      lastX = touch.clientX;
-      lastY = touch.clientY;
+      const stepX = lastX - event.clientX;
+      const stepY = lastY - event.clientY;
+      lastX = event.clientX;
+      lastY = event.clientY;
       travelX += Math.abs(stepX);
       travelY += Math.abs(stepY);
 
@@ -212,10 +225,10 @@ export function useArcScrub({
 
       const step = axis === "x" ? stepX : stepY;
       const last = Math.max(0, live.current.frameCount - 1);
-      const raw = target.current + step / TOUCH_PER_SLOT;
+      const raw = target.current + step / DRAG_PER_SLOT;
 
       if (raw < 0 || raw > last) {
-        // Ponta da fita: o dedo passa a levar a página. É o que evita o carrossel virar
+        // Ponta da fita: o gesto passa a levar a página. É o que evita o carrossel virar
         // uma armadilha num celular, onde ele ocupa boa parte da tela.
         target.current = Math.min(last, Math.max(0, raw));
         if (axis === "y") window.scrollBy(0, stepY);
@@ -228,15 +241,29 @@ export function useArcScrub({
       loop();
     };
 
-    node.addEventListener("wheel", onWheel, { passive: false });
+    const onPointerEnd = (event: PointerEvent) => {
+      if (event.pointerId !== activePointerId) return;
+      dragging = false;
+      activePointerId = null;
+      axis = null;
+    };
+
+    // No `window`, não em `node`: o gesto precisa valer com o mouse em QUALQUER ponto da
+    // página, não só sobre a galeria — quem decide se intercepta é a guarda de visibilidade
+    // acima (o retângulo do stage), não a posição do cursor.
+    window.addEventListener("wheel", onWheel, { passive: false });
     const drag = dragRef.current;
-    drag?.addEventListener("touchstart", onTouchStart, { passive: true });
-    drag?.addEventListener("touchmove", onTouchMove, { passive: false });
+    drag?.addEventListener("pointerdown", onPointerDown);
+    drag?.addEventListener("pointermove", onPointerMove, { passive: false });
+    drag?.addEventListener("pointerup", onPointerEnd);
+    drag?.addEventListener("pointercancel", onPointerEnd);
 
     return () => {
-      node.removeEventListener("wheel", onWheel);
-      drag?.removeEventListener("touchstart", onTouchStart);
-      drag?.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("wheel", onWheel);
+      drag?.removeEventListener("pointerdown", onPointerDown);
+      drag?.removeEventListener("pointermove", onPointerMove);
+      drag?.removeEventListener("pointerup", onPointerEnd);
+      drag?.removeEventListener("pointercancel", onPointerEnd);
       if (frame.current != null) cancelAnimationFrame(frame.current);
       if (snapTimer.current != null) clearTimeout(snapTimer.current);
       frame.current = null;

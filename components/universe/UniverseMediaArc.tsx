@@ -13,12 +13,7 @@ import type { PoolItem } from "@/content/media-pool";
 import { GlassMediaCard } from "./GlassMediaCard";
 
 /** Quantas imagens de cada seção entram na fita — e, portanto, quanto scroll a seção
- *  custa antes de a seguinte assumir o centro.
- *
- *  O anel de `offsetFor` hoje é a fita INTEIRA (~32 quadros em /company), não uma seção,
- *  então a vaga onde cada quadro dá a volta já está muito longe do centro — o mínimo de 9
- *  que essa volta exigia deixou de ser uma restrição. O que este número calibra agora é
- *  ritmo: quantas imagens de uma seção se atravessa antes de a próxima assumir o centro. */
+ *  custa antes de a seguinte assumir o centro. */
 export const ARC_COUNT = 9;
 
 /** Quantos quadros aparecem de cada lado do destaque (o conceito mostra 3). */
@@ -83,22 +78,16 @@ export const ARC_BOX =
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /**
- * Deslocamento de um quadro em relação ao destaque, pelo caminho MAIS CURTO no anel — é
- * isto que torna o arco circular. O anel é a fita inteira, todas as seções juntas: é daí
- * que sai a continuidade, porque o vizinho à direita do último quadro de uma seção é
- * simplesmente o primeiro da seguinte.
+ * Deslocamento de um quadro em relação ao destaque — linear, SEM dar a volta. No primeiro
+ * quadro da fita não existe nada antes dele, e no último não existe nada depois: o arco
+ * deve mesmo ficar com um lado "vazio" nas pontas, em vez de mostrar o último quadro
+ * colado à esquerda do primeiro (ou o primeiro à direita do último).
  *
  * Aceita posição fracionária: com o scroll contínuo, 2.4 é uma posição válida, entre dois
- * quadros. Sem dar a volta, a fita abriria com o destaque no primeiro quadro e nada à
- * esquerda dele — o arco ficaria torto justamente no primeiro quadro que a pessoa vê.
- *
- * Só a APARÊNCIA dá a volta: o índice continua linear (0…n-1) e o scrub o mantém preso a
- * essa faixa, então as pontas da fita continuam devolvendo o scroll ao navegador.
+ * quadros.
  */
-function offsetFor(index: number, position: number, count: number) {
-  const half = count / 2;
-  const raw = (((index - position) % count) + count) % count;
-  return raw > half ? raw - count : raw;
+function offsetFor(index: number, position: number) {
+  return index - position;
 }
 
 /**
@@ -231,7 +220,7 @@ export function UniverseMediaArc({
     () =>
       frames.map(
         (_, index) =>
-          Math.min(Math.abs(offsetFor(index, firstActive, frames.length)), VISIBLE_SIDE) *
+          Math.min(Math.abs(offsetFor(index, firstActive)), VISIBLE_SIDE) *
           60,
       ),
     [frames, firstActive],
@@ -248,7 +237,7 @@ export function UniverseMediaArc({
     for (let index = 0; index < frames.length; index += 1) {
       const node = cards.current[index];
       if (!node) continue;
-      const placement = placementFor(offsetFor(index, position, frames.length));
+      const placement = placementFor(offsetFor(index, position));
 
       // Quadro fora da janela visível: esconde e NÃO escreve mais nada nele.
       //
@@ -309,7 +298,7 @@ export function UniverseMediaArc({
       className="relative h-full w-full select-none"
     >
       {frames.map((frame, index) => {
-        const distance = Math.abs(offsetFor(index, activeIndex, frames.length));
+        const distance = Math.abs(offsetFor(index, activeIndex));
         const { item } = frame;
         return (
           <GlassMediaCard
