@@ -33,9 +33,11 @@ export function UniverseContactSection({
 }) {
   return (
     <section id="orcamento" className="relative scroll-mt-24 px-4 py-20 md:py-28">
+      {/* Brilho azul atrás do painel. A máscara faz ele nascer transparente na borda de
+          cima — ancorado ali com força máxima, desenhava uma faixa reta na entrada. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_100%_at_50%_0%,rgb(23_67_244/0.25),transparent_70%)]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(60%_100%_at_50%_0%,rgb(23_67_244/0.25),transparent_70%)] [-webkit-mask-image:linear-gradient(to_bottom,transparent,black_35%)] [mask-image:linear-gradient(to_bottom,transparent,black_35%)]"
       />
       <Reveal
         className="hairline mx-auto flex max-w-2xl flex-col items-center gap-4 rounded-[32px] border bg-gradient-to-b from-electric/12 via-electric/[0.04] to-transparent px-6 py-12 text-center shadow-[0_50px_100px_-45px_rgb(23_67_244/0.55)] md:px-14 md:py-16"

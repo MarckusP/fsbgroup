@@ -59,6 +59,16 @@ body {
 /* Abertura da home (IntroLogo): enquanto o véu existe, a logo do cabeçalho fica
    invisível — é a do véu que está voando até ela. Com movimento reduzido não há
    abertura: o véu nem chega a aparecer. */
+/* Cabeçalho fixo: transparente no topo (sobre o vídeo); com a página rolada (ScrollFlag),
+   ganha fundo translúcido e desfoque pra logo e o botão de idioma não se misturarem com o
+   conteúdo que passa por baixo. */
+html[data-scrolled] .site-header {
+  background-color: rgb(5 2 17 / 0.72);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgb(248 246 245 / 0.06);
+}
+
 body:has(.intro-overlay) [data-intro-target] {
   opacity: 0;
 }

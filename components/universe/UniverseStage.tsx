@@ -17,11 +17,6 @@ import {
 import { textBlockExit, textLine } from "./stageMotion";
 import { UniverseSectionNav } from "./UniverseSectionNav";
 
-/** Tempo pra fita chegar à última imagem antes de a página descer ao formulário — o laço
- *  de `useArcScrub` atravessa a fita inteira em ~0,9 s; aqui a descida já começa no fim
- *  do glide, sem esperar o assentamento completo. */
-const QUOTE_SCROLL_DELAY_MS = 750;
-
 export type StageSection = {
   readonly slug: string;
   readonly copy: SectionCopy;
@@ -188,7 +183,7 @@ export function UniverseStage({
           wheel encaixa a página no stage inteiro, então galeria e botão ficam juntos na
           tela enquanto a fita anda (a reserva de altura em `ARC_BOX` já conta com ele).
           Entra subindo e crescendo ao aparecer; a seta balança pra baixo, apontando o
-          formulário. O clique leva a fita até a última imagem e desce pro formulário; sem
+          formulário. O clique desce pro formulário e, junto, leva a fita até a última imagem; sem
           JS, o `href` já faz o salto. */}
       {/* A entrada (subir + crescer) vive no wrapper; o halo é IRMÃO do botão, atrás dele
           — dentro do botão, um filho com z negativo pinta por cima do próprio fundo e o
@@ -205,8 +200,8 @@ export function UniverseStage({
         {!reduce && (
           <motion.span
             aria-hidden
-            className="pointer-events-none absolute inset-0 rounded-full bg-electric"
-            animate={{ scale: [1, 1.22], opacity: [0, 0.45, 0] }}
+            className="pointer-events-none absolute inset-0 rounded-full bg-electric blur-md"
+            animate={{ scale: [1, 1.25], opacity: [0, 0.7, 0] }}
             transition={{ duration: 2, times: [0, 0.25, 1], repeat: Infinity, ease: "easeOut" }}
           />
         )}
@@ -214,13 +209,12 @@ export function UniverseStage({
           href="#orcamento"
           onClick={(event) => {
             event.preventDefault();
+            // Os dois ao mesmo tempo: a página já desce pro formulário enquanto a fita
+            // corre até a última imagem — ninguém espera a galeria terminar pra ser levado.
             goTo(frames.length - 1);
-            const form = document.getElementById("orcamento");
-            if (!form) return;
-            window.setTimeout(
-              () => form.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }),
-              reduce ? 0 : QUOTE_SCROLL_DELAY_MS,
-            );
+            document
+              .getElementById("orcamento")
+              ?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
           }}
           whileHover={reduce ? undefined : { scale: 1.03 }}
           transition={{ duration: 0.25 }}

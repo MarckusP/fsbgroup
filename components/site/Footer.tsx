@@ -8,7 +8,8 @@ export function Footer({ dict }: { dict: Dictionary }) {
   return (
     <footer className="shell hairline relative z-10 border-t bg-midnight-deep pb-10 pt-16">
       <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
-        <div className="space-y-6">
+        {/* `w-fit`: a coluna tem a largura da frase, e a logo centraliza em cima dela. */}
+        <div className="flex w-fit flex-col items-center gap-6 text-center">
           <img
             src={logos.light}
             srcSet={`${logos.light} 1x, ${logos.lightRetina} 2x`}
@@ -18,7 +19,7 @@ export function Footer({ dict }: { dict: Dictionary }) {
             loading="lazy"
             className="h-20 w-auto md:h-24"
           />
-          <p className="max-w-xs text-sm leading-relaxed text-bone/55">
+          <p className="text-sm leading-relaxed text-bone/55">
             {dict.footer.tagline}
           </p>
         </div>

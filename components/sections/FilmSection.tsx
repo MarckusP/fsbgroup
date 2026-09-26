@@ -33,6 +33,12 @@ export function FilmSection({ dict }: { dict: Dictionary }) {
 
   return (
     <section className="shell relative z-10 bg-midnight-deep py-24 md:py-36">
+      {/* Rampa acima da seção: o vídeo de fundo do hero se dissolve no fundo sólido em
+          vez de terminar numa linha reta na borda desta seção. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute bottom-full left-1/2 h-40 w-screen -translate-x-1/2 bg-gradient-to-b from-transparent to-midnight-deep"
+      />
       <Reveal className="mb-10 flex flex-col gap-4">
         <p className="type-eyebrow text-electric">{dict.film.eyebrow}</p>
         <h2 className="type-display max-w-4xl text-[clamp(2rem,6vw,5rem)]">
