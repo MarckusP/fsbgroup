@@ -31,6 +31,11 @@ export const site = {
       "https://www.google.com/maps/search/2295+S+Hiawassee+Rd,+Ste+313,+Orlando+FL+32835,+Estados+Unidos/@28.5178,-81.4819,17z?hl=pt-BR",
   },
 
+  /** Cloudflare Worker que grava o formulário de orçamento no Kanban de leads do Notion
+   *  (ver workers/notion-leads/README.md).
+   *  Se ficar vazio, o formulário volta a abrir o WhatsApp. */
+  leadsEndpoint: "https://fsb-notion-leads.notion-leads.workers.dev" as string,
+
   socials: [
     { id: "instagram", label: "Instagram", href: "https://instagram.com/fsbproduction" }, // TODO
     { id: "youtube", label: "YouTube", href: "https://youtube.com/@fsbproduction" }, // TODO
@@ -58,22 +63,12 @@ export const filmMedia = {
 
 export const logos = {
   /** Versão clara — para fundos escuros, que é o caso em todo o site. */
-  light: "/media/logo/fsb-principal-claro.webp",
-  lightRetina: "/media/logo/fsb-principal-claro@2x.webp",
+  light: "/media/logo/fsb-selo-claro.webp",
+  lightRetina: "/media/logo/fsb-selo-claro@2x.webp",
   /** Versão escura — para fundos claros (impressos, parceiros). Não usada no site hoje. */
-  dark: "/media/logo/fsb-principal-escuro.webp",
-  darkRetina: "/media/logo/fsb-principal-escuro@2x.webp",
-  /** Selo circular com anel de texto, já corrigido (sem o "STORYTELLIHC" antigo). */
-  seal: "/media/logo/fsb-reduzida-escuro.webp",
-  sealRetina: "/media/logo/fsb-reduzida-escuro@2x.webp",
-  /** Só o ícone do obturador, sem texto — para usos pequenos (favicon, spinner). */
-  icon: "/media/logo/fsb-icone.webp",
-  iconRetina: "/media/logo/fsb-icone@2x.webp",
-  /** Mesmo ícone, vetorizado (ver scripts/README de mídia) — usado no favicon
-   *  (`app/icon.svg`). Cores batidas com o master; sem texto, então nada de trace
-   *  de letras — só as 7 lâminas + triângulo, que são formas chapadas. */
-  iconSvg: "/media/logo/fsb-icone.svg",
-  /** Ícone dentro do anel metálico, sem texto. */
-  iconRing: "/media/logo/fsb-icone-anel.webp",
-  iconRingRetina: "/media/logo/fsb-icone-anel@2x.webp",
+  dark: "/media/logo/fsb-selo-escuro.webp",
+  darkRetina: "/media/logo/fsb-selo-escuro@2x.webp",
+  /** Selo circular com anel de texto claro. */
+  seal: "/media/logo/fsb-selo-claro.webp",
+  sealRetina: "/media/logo/fsb-selo-claro@2x.webp",
 } as const;

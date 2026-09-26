@@ -1,8 +1,9 @@
 import { en } from "@/content/dictionaries/en";
+import { es } from "@/content/dictionaries/es";
 import { pt } from "@/content/dictionaries/pt";
 import type { Dictionary, Locale } from "@/content/dictionaries/types";
 
-const dictionaries: Record<Locale, Dictionary> = { pt, en };
+const dictionaries: Record<Locale, Dictionary> = { pt, en, es };
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale];
@@ -12,6 +13,7 @@ export function getDictionary(locale: Locale): Dictionary {
 export const HTML_LANG: Record<Locale, string> = {
   pt: "pt-BR",
   en: "en-US",
+  es: "es",
 };
 
 export { LOCALES, DEFAULT_LOCALE, isLocale } from "@/content/dictionaries/types";

@@ -10,7 +10,21 @@
   <body>
     <script>
       (function () {
-        var locales = ["pt", "en"];
+        var locales = ["pt", "en", "es"];
+
+        // Se o visitante já escolheu um idioma antes (ver LocaleSwitcher), respeita
+        // essa escolha em vez de tentar adivinhar de novo pelo navegador.
+        var stored = null;
+        try {
+          stored = localStorage.getItem("fsb-locale");
+        } catch (e) {
+          stored = null;
+        }
+        if (stored && locales.indexOf(stored) !== -1) {
+          location.replace("/" + stored + "/");
+          return;
+        }
+
         var preferred = (navigator.languages || [navigator.language || ""]).map(
           function (tag) {
             return tag.toLowerCase().split("-")[0];

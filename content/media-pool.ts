@@ -186,14 +186,26 @@ function promote(pool: readonly PoolItem[], featured: readonly string[]) {
 }
 
 const EVENTS_FEATURED = [
+  // A galeria de `production` mostra só 5 quadros (ver `ARC_COUNT`) — estes dois abrem a
+  // seção de propósito: o maior telão de LED do acervo (escala de arena, não só uma tela
+  // de palco) e a melhor foto de DJ (mão no mixer, luz de pista — `events-production-dj-
+  // console.webp` é só um truss de iluminação, apesar do nome).
+  "events-wall-led-1.webp",
+  "events-dj-mixing.webp",
   "events-wall-led-create-show-experience.webp",
   "events-stage-lighting.webp",
   // Vídeo dentro dos 5 primeiros: quem chega já vê a camada da frente viva (§9).
   "events-cople-flipingcamp.mp4",
-  "events-dj-mixing.webp",
   "events-photo-couple-cross-1.webp",
   "events-led-touring-festivals.webp",
   "events-photographer-wedding.webp",
+  // Idem para `corporate`: o padrão (ordem alfabética do inventário) abria com uma foto
+  // fora de foco (`events-corporate-auditorio-cheio.webp`) — estas quatro são as mais
+  // fortes da seção e ficam na frente dela.
+  "events-corporate-conference-craft.webp",
+  "events-corporate-painel-discussao.webp",
+  "events-live-performace-indor.webp",
+  "events-corporate-convencao-empresarial.webp",
 ];
 
 const COMPANY_FEATURED = [
@@ -202,9 +214,9 @@ const COMPANY_FEATURED = [
   // Idem — o card Company abre já mostrando um trabalho em movimento (aqui, um site
   // real entregue pela FSB, que ainda leva o link clicável em /company → web).
   "company-web-app-passoamerica-com.mp4",
-  // Os outros sites reais entregues pela FSB. Ficam no topo porque a seção `web` tem 21
-  // itens e o arco só mostra os 9 primeiros — sem isto, justamente os trabalhos que
-  // levam link clicável ficariam de fora da galeria.
+  // Os outros sites reais entregues pela FSB. A seção `web` tem exatamente 5 itens, então
+  // o arco (`ARC_COUNT`) já mostra todos — isto só decide a ORDEM, com o resto do site
+  // (não-clicável) atrás deles.
   "company-web-app-kaminskilaw-com.mp4",
   "company-web-app-paraisotropicalbr222-com-br.mp4",
   "company-web-app-nexora-conceitual.mp4",

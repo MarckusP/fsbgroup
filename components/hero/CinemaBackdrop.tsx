@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { heroMedia } from "@/content/site";
 import type { Dictionary } from "@/lib/dictionaries";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
+import { useIntroDone } from "@/lib/intro";
 import { HeroPlayTrigger } from "./SoundToggle";
 
 /**
@@ -21,7 +22,10 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
   // Com movimento reduzido, o vídeo só carrega se a pessoa pedir pelo botão.
   // `reduceMotion` é null até o primeiro efeito do motion, e null não é false —
   // por isso a comparação estrita, que segura o carregamento até haver resposta.
-  const wantsVideo = forcePlay || reduceMotion === false;
+  // E, com movimento liberado, só depois que a abertura da logo pousa (IntroLogo) — até
+  // lá o poster segura a tela.
+  const introDone = useIntroDone();
+  const wantsVideo = forcePlay || (reduceMotion === false && introDone);
   const vh = useViewportHeight();
 
   const { scrollY } = useScroll();

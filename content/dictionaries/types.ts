@@ -7,7 +7,7 @@
 
 import type { CompanySection, EventsSection } from "@/content/media-pool";
 
-export const LOCALES = ["pt", "en"] as const;
+export const LOCALES = ["pt", "en", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "pt";
 
@@ -46,6 +46,8 @@ export type UniverseCopy<Section extends string> = {
    *  "Tipo de projeto" em Company. */
   readonly formTypeLabel: string;
   readonly sections: Record<Section, SectionCopy>;
+  /** Frases de destaque exibidas na página — hoje só usado em `company`. */
+  readonly highlights?: readonly string[];
 };
 
 export type Dictionary = {
@@ -108,6 +110,8 @@ export type Dictionary = {
     readonly showImage: string;
     /** `aria-label` do link para o site que o trabalho mostra — `{host}` vira o domínio. */
     readonly openSite: string;
+    /** CTA de orçamento exibido no stage de /company e /events. */
+    readonly quoteCta: string;
   };
   /** Conteúdo real de /events — barra lateral + colunas de cada seção. */
   readonly events: UniverseCopy<EventsSection>;
@@ -119,12 +123,19 @@ export type Dictionary = {
     readonly title: string;
     readonly name: string;
     readonly namePlaceholder: string;
-    /** Único outro campo obrigatório, junto com o nome. */
+    /** Obrigatório, junto com nome e telefone. */
     readonly date: string;
+    /** Obrigatório — é por ele que a equipe retorna o lead no Kanban do Notion. */
+    readonly phone: string;
+    readonly phonePlaceholder: string;
     readonly email: string;
     readonly emailPlaceholder: string;
     readonly details: string;
     readonly detailsPlaceholder: string;
     readonly cta: string;
+    readonly sending: string;
+    readonly success: string;
+    /** Falha no envio — oferece o WhatsApp como saída, para o lead não se perder. */
+    readonly error: string;
   };
 };

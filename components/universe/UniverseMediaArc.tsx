@@ -13,8 +13,10 @@ import type { PoolItem } from "@/content/media-pool";
 import { GlassMediaCard } from "./GlassMediaCard";
 
 /** Quantas imagens de cada seção entram na fita — e, portanto, quanto scroll a seção
- *  custa antes de a seguinte assumir o centro. */
-export const ARC_COUNT = 9;
+ *  custa antes de a seguinte assumir o centro. Reduzido de 9 para 5: a curadoria (ver
+ *  `EVENTS_FEATURED`/`COMPANY_FEATURED` em `content/media-pool.ts`) já garante que os 5
+ *  primeiros de cada seção são os mais fortes do acervo. */
+export const ARC_COUNT = 5;
 
 /** Quantos quadros aparecem de cada lado do destaque (o conceito mostra 3). */
 const VISIBLE_SIDE = 3;
@@ -35,10 +37,11 @@ export const arcItems = (media: readonly PoolItem[]) => media.slice(0, ARC_COUNT
 /**
  * Distância, em quadros, até onde a mídia é realmente carregada.
  *
- * A fita inteira (~32 quadros em /company, ~36 em /events) fica montada o tempo todo, e
- * todo card vive dentro do container visível — `loading="lazy"` sozinho não seguraria nada,
- * o navegador buscaria os ~36 posters no primeiro paint. Então o `src` só é entregue perto
- * do destaque. A folga sobre `placementFor` (que já zera a opacidade em 3.6) é de propósito:
+ * A fita inteira (4 seções × 5 quadros = ~20, em /company e em /events) fica montada o
+ * tempo todo, e todo card vive dentro do container visível — `loading="lazy"` sozinho não
+ * seguraria nada, o navegador buscaria os ~20 posters no primeiro paint. Então o `src` só
+ * é entregue perto do destaque. A folga sobre `placementFor` (que já zera a opacidade em
+ * 3.6) é de propósito:
  * o quadro carrega enquanto ainda está invisível e nunca aparece vazio, mesmo num scroll
  * rápido.
  */
@@ -64,16 +67,15 @@ const VIDEO_SETTLE_MS = 160;
  * fora da tela e devolveria o gesto pro navegador, fazendo a página descer até o
  * formulário no meio da troca.
  *
- * A altura é limitada pelo que sobra da primeira tela, não só por um valor fixo: `100svh`
- * menos o cabeçalho da página, a faixa de seções e os vãos. Se o arco passar disso, o stage
- * inteiro deixa de caber no viewport e a mesma guarda devolve o scroll ao navegador. A
- * reserva ficou FOLGADA desde que os botões de seção saíram — dá pra crescer o arco em telas
- * baixas mexendo nos `32rem`/`34rem`, mas é decisão de layout, não consequência da remoção. `--arc-base` acompanha pelo mesmo fator (0.68 ≈ 1/1.47, a razão entre o
+ * A altura é limitada pelo que sobra da tela, não só por um valor fixo: `100svh` menos o
+ * cabeçalho fixo, a faixa de seções, o texto da seção (empilhado ACIMA do arco) e os vãos. Se o arco passar disso, o stage
+ * inteiro deixa de caber no viewport e a mesma guarda devolve o scroll ao navegador. Os
+ * `29rem`/`30rem` são essa reserva (inclui o botão de orçamento abaixo do arco) — encolher o texto da seção libera espaço pro arco. `--arc-base` acompanha pelo mesmo fator (0.68 ≈ 1/1.47, a razão entre o
  * lado-base e a altura necessária para o retrato mais alto caber): encolher o container
  * sem encolher o card só faria o card ser recortado.
  */
 export const ARC_BOX =
-  "h-[19rem] [--arc-base:12.25rem] sm:h-[21.5rem] sm:[--arc-base:14.25rem] md:h-[min(21.5rem,calc(100svh-32rem))] md:[--arc-base:min(14.25rem,calc((100svh-32rem)*0.68))] lg:h-[min(25rem,calc(100svh-34rem))] lg:[--arc-base:min(17rem,calc((100svh-34rem)*0.68))]";
+  "h-[19rem] [--arc-base:12.25rem] sm:h-[21.5rem] sm:[--arc-base:14.25rem] md:h-[min(21.5rem,calc(100svh-29rem))] md:[--arc-base:min(14.25rem,calc((100svh-29rem)*0.68))] lg:h-[min(25rem,calc(100svh-30rem))] lg:[--arc-base:min(17rem,calc((100svh-30rem)*0.68))]";
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -200,7 +202,7 @@ export function UniverseMediaArc({
   const [firstActive] = useState(activeIndex);
 
   // Um callback de ref FIXO por posição. Com um arrow novo a cada render, o React desanexa
-  // e reanexa os ~32 refs a cada mudança de quadro — e, junto com props instáveis, anula o
+  // e reanexa os ~20 refs a cada mudança de quadro — e, junto com props instáveis, anula o
   // `memo` de `GlassMediaCard`, fazendo a fita inteira re-renderizar durante o movimento.
   const setCard = useMemo(
     () =>
@@ -214,7 +216,7 @@ export function UniverseMediaArc({
   //
   // Ele só tem efeito na primeira pintura, mas se fosse recalculado a partir do destaque
   // atual mudaria para todo card a cada quadro que passa — e uma prop que muda em todos os
-  // ~32 cards a cada quadro anula o `memo` deles, que é justamente o que segura o custo do
+  // ~20 cards a cada quadro anula o `memo` deles, que é justamente o que segura o custo do
   // movimento.
   const openDelays = useMemo(
     () =>
@@ -241,12 +243,13 @@ export function UniverseMediaArc({
 
       // Quadro fora da janela visível: esconde e NÃO escreve mais nada nele.
       //
-      // Isto é o que devolveu o movimento a 60fps depois que a fita passou de 9 para ~32
-      // cards. `opacity: 0` sozinho não bastava: o card continua sendo pintado, e cada
-      // `.glass` carrega um `backdrop-filter: blur(22px)` — desfocar o fundo de 32
-      // elementos a cada frame é caro o suficiente para derrubar a taxa de quadros
-      // sozinho. `visibility: hidden` tira o card da pintura inteira, e pular as escritas
-      // de estilo evita invalidar 25 elementos por frame à toa.
+      // Isto é o que devolveu o movimento a 60fps quando a fita passou a ser contínua (de
+      // 9 cards de UMA seção por vez para todas as seções juntas, ~20 hoje). `opacity: 0`
+      // sozinho não bastava: o card continua sendo pintado, e cada `.glass` carrega um
+      // `backdrop-filter: blur(22px)` — desfocar o fundo de todo quadro fora da janela
+      // visível a cada frame é caro o suficiente para derrubar a taxa de quadros sozinho.
+      // `visibility: hidden` tira o card da pintura inteira, e pular as escritas de estilo
+      // evita invalidar elementos por frame à toa.
       if (placement.opacity <= 0.001) {
         if (node.style.visibility !== "hidden") {
           node.style.visibility = "hidden";

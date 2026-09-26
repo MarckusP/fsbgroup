@@ -1,5 +1,6 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Fragment } from "react";
 import { Footer } from "@/components/site/Footer";
 import { Header } from "@/components/site/Header";
 import { Reveal } from "@/components/ui/Reveal";
@@ -58,7 +59,12 @@ export function UniversePage({
           className="stage-ambient grain pointer-events-none absolute inset-0 overflow-hidden"
         />
 
-        <div className="relative z-10 flex flex-col pl-[5vw] pr-[6vw] lg:pl-12 lg:pr-20">
+        {/* `.shell` (ver globals.css) no lugar de `pl-[5vw] pr-[6vw] lg:pl-12 lg:pr-20`:
+            aquele respiro era assimétrico (a borda direita sempre um pouco mais larga
+            que a esquerda) sem motivo — `.shell` é o mesmo gutter simétrico usado pelo
+            resto do site (Header, Footer, seções da home), então o conteúdo agora fica
+            de fato centralizado na largura da página. */}
+        <div className="shell relative z-10 flex flex-col">
           {/* Ocupa a página inteira de propósito: o formulário vive DEPOIS deste bloco,
               então ele nunca aparece ao lado das seções enquanto a pessoa navega entre
               elas — só surge quando ela rola pra baixo de propósito, como último item.
@@ -70,7 +76,11 @@ export function UniversePage({
               abaixo da dobra — a página nascia rolável e o primeiro scroll revelava o
               topo do formulário em vez de navegar a galeria. */}
           <div className="flex min-h-[calc(100svh-5rem)] flex-col gap-10">
-            <div className="flex flex-col items-start gap-4">
+            {/* `items-center text-center` (era `items-start`, sem `text-center`): o pedido
+                era centralizar o cabeçalho inteiro na página, não só a coluna de texto —
+                por isso também `mx-auto` no parágrafo do intro, que tem `max-w-xl` e
+                senão ficaria largo à esquerda dentro de um pai já centralizado. */}
+            <div className="flex flex-col items-center gap-4 text-center">
               <Link
                 href={`/${lang}`}
                 className="inline-flex items-center gap-2 text-sm text-bone/50 transition-colors hover:text-electric"
@@ -79,7 +89,7 @@ export function UniversePage({
                 {dict.nav.back}
               </Link>
 
-              <Reveal className="flex flex-col items-start gap-5">
+              <Reveal className="flex flex-col items-center gap-5">
                 {/* Este é o eyebrow de topo da própria página (não o de uma seção) —
                     maior que o `.type-eyebrow` padrão (11px) de propósito, pra marcar
                     que é o título do universo inteiro, não um rótulo secundário. */}
@@ -89,16 +99,43 @@ export function UniversePage({
                 <h1 className="type-display text-[clamp(2.25rem,4.5vw,3.75rem)] text-bone">
                   {copy.title}
                 </h1>
-                <p className="max-w-xl text-balance text-base leading-relaxed text-bone/60 md:text-lg">
+                <p className="mx-auto max-w-xl text-balance text-base leading-relaxed text-bone/60 md:text-lg">
                   {copy.intro}
                 </p>
+
+                {/* Só em /company, e só quando o dicionário traz a copy — outras páginas
+                    (e locales ainda sem a chave) simplesmente não renderizam nada aqui.
+                    Duas linhas curtas, centralizadas, separadas por um pontinho na cor da
+                    marca em vez de um traço: mais leve que uma régua horizontal e ecoa os
+                    pontos de luz do trilho da galeria (`ArcRail`, em `UniverseMediaArc`). */}
+                {universe === "company" &&
+                  dict.company.highlights &&
+                  dict.company.highlights.length > 0 && (
+                    <div className="flex flex-col items-center gap-2">
+                      {dict.company.highlights.map((line, index) => (
+                        <Fragment key={line}>
+                          {index > 0 && (
+                            <span aria-hidden className="h-1 w-1 rounded-full bg-electric" />
+                          )}
+                          <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-bone/80 md:text-sm">
+                            {line}
+                          </p>
+                        </Fragment>
+                      ))}
+                    </div>
+                  )}
               </Reveal>
             </div>
 
             <UniverseStage sections={sections} stage={dict.stage} />
           </div>
 
-          <UniverseContactSection formTypeLabel={copy.formTypeLabel} form={dict.form} />
+          <UniverseContactSection
+            formTypeLabel={copy.formTypeLabel}
+            form={dict.form}
+            universe={universe}
+            locale={lang}
+          />
         </div>
       </main>
 

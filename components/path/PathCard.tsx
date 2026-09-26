@@ -35,12 +35,14 @@ export function PathCard({
     enabled: !reduceMotion,
   });
 
+  // Altura ~12% menor que antes (58/66svh) para que Company e Events leiam como dois
+  // objetos distintos lado a lado, e não como metades de um bloco só — pedido do cliente.
   return (
     <article
       ref={containerRef}
       {...handlers}
       style={{ animationDelay: floatDelay }}
-      className="group relative min-h-[58svh] [perspective:1400px] motion-safe:animate-[float_7s_ease-in-out_infinite] md:min-h-[66svh]"
+      className="group relative min-h-[51svh] [perspective:1400px] motion-safe:animate-[float_7s_ease-in-out_infinite] md:min-h-[58svh]"
     >
       <div className="h-full transition-transform duration-500 ease-[var(--ease-cinema)] group-hover:-translate-y-2.5 group-focus-within:-translate-y-2.5">
         <div

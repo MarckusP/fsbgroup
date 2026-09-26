@@ -13,10 +13,10 @@ export function Footer({ dict }: { dict: Dictionary }) {
             src={logos.light}
             srcSet={`${logos.light} 1x, ${logos.lightRetina} 2x`}
             alt={dict.footer.logoAlt}
-            width={445}
-            height={207}
+            width={128}
+            height={128}
             loading="lazy"
-            className="h-8 w-auto"
+            className="h-20 w-auto md:h-24"
           />
           <p className="max-w-xs text-sm leading-relaxed text-bone/55">
             {dict.footer.tagline}

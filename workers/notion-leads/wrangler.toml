@@ -1,0 +1,10 @@
+name = "fsb-notion-leads"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+
+[vars]
+# Fonte de dados "Pipeline de Leads" (página "FSB — Leads do Site" no Notion).
+NOTION_DATA_SOURCE_ID = "210b5762-68e8-41cd-85c3-2bd64202b8e4"
+ALLOWED_ORIGINS = "https://portalfsb.com,https://www.portalfsb.com,http://localhost:3000"
+
+# NOTION_TOKEN é secret — nunca aqui. Ver README: `npx wrangler secret put NOTION_TOKEN`.

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { CinemaBackdrop } from "@/components/hero/CinemaBackdrop";
 import { HeroSection } from "@/components/hero/HeroSection";
+import { IntroLogo } from "@/components/hero/IntroLogo";
 import { PathSelector } from "@/components/path/PathSelector";
 import { FilmSection } from "@/components/sections/FilmSection";
 import { FinalPaths } from "@/components/sections/FinalPaths";
@@ -34,6 +35,7 @@ export default async function HomePage({
       </a>
 
       <Header dict={dict} lang={lang} />
+      <IntroLogo alt={dict.footer.logoAlt} />
 
       <CinemaBackdrop dict={dict} />
 

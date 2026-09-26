@@ -15,6 +15,11 @@ const LERP = 0.18;
 const SNAP_DELAY_MS = 130;
 /** Abaixo disso o movimento é considerado terminado e o rAF para. */
 const EPSILON = 0.0004;
+/** Autoplay: silêncio antes de a fita começar a andar sozinha, e o intervalo entre quadros
+ *  daí em diante. Qualquer interação (scroll, arrasto, clique) zera a contagem. */
+const AUTOPLAY_MS = 3000;
+/** Duração do encaixe da página no stage, em ms — o wheel fica engolido durante ele. */
+const ALIGN_MS = 550;
 
 /**
  * Navegação do arco com posição CONTÍNUA — o scroll não dispara uma transição pronta,
@@ -49,8 +54,8 @@ const EPSILON = 0.0004;
  *
  * Duas guardas herdadas, ambas deliberadas:
  *
- * 1. Só intercepta o wheel quando o stage já está inteiro dentro da tela — enquanto sobrar
- *    conteúdo dele fora do viewport, o scroll normal do navegador acontece primeiro. Usa o
+ * 1. Trava: quando o stage entra na tela na direção do gesto, a página encaixa nele
+ *    (centralizado abaixo do cabeçalho fixo) e o wheel passa a andar só a fita. Usa o
  *    retângulo do próprio `containerRef` (não `document.scrollHeight`): a página tem o
  *    formulário de contato e o rodapé depois do stage, e eles não contam.
  * 2. Nas duas pontas da fita (primeiro quadro subindo, último descendo) o evento volta pro
@@ -97,6 +102,8 @@ export function useArcScrub({
   const run = useRef<() => void>(() => {});
   /** Último índice avisado ao React — só pra não avisar duas vezes o mesmo. */
   const reported = useRef(0);
+  /** Reinicia a contagem do autoplay — exposto pelo efeito principal para `goTo`. */
+  const restartIdle = useRef<() => void>(() => {});
 
   // Espelhado em ref para o listener e o laço não precisarem ser reatados a cada frame.
   const live = useRef({ frameCount, onNavigate, onFrame, enabled });
@@ -146,8 +153,69 @@ export function useArcScrub({
       }, SNAP_DELAY_MS);
     };
 
+    /* --- autoplay ----------------------------------------------------------------- */
+
+    // Sem interação por AUTOPLAY_MS, a fita avança um quadro a cada AUTOPLAY_MS e, no
+    // último, volta ao primeiro. Não anda com a galeria fora da tela nem com a aba em
+    // segundo plano (o quadro só adiantaria sem ninguém ver), e nunca com movimento
+    // reduzido — conteúdo que se move sozinho é justamente o que essa preferência evita.
+    let visible = false;
+    let idleTimer: number | null = null;
+    /** Página deslizando pra encaixar no stage (ver a trava em `onWheel`). */
+    let aligning = false;
+
+    const autoplayTick = () => {
+      idleTimer = window.setTimeout(autoplayTick, AUTOPLAY_MS);
+      if (!live.current.enabled || !visible || document.hidden) return;
+      const last = Math.max(0, live.current.frameCount - 1);
+      const next = Math.round(target.current) + 1;
+      target.current = next > last ? 0 : next;
+      loop();
+    };
+
+    const restart = () => {
+      if (idleTimer != null) clearTimeout(idleTimer);
+      idleTimer = window.setTimeout(autoplayTick, AUTOPLAY_MS);
+    };
+    restartIdle.current = restart;
+    restart();
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const wasVisible = visible;
+        visible = entry.isIntersecting;
+        // Ao entrar na tela, conta os 3 s a partir dali — não herda um timer já vencido.
+        if (visible && !wasVisible) restart();
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(node);
+
+    // Rolar a página conta como interação — no touch não existe `wheel`, e é assim que o
+    // gesto do dedo chega aqui. O autoplay nunca rola a página, então não se auto-reinicia.
+    window.addEventListener("scroll", restart, { passive: true });
+
     const onWheel = (event: WheelEvent) => {
-      if (!live.current.enabled || event.deltaY === 0) return;
+      if (!live.current.enabled) return;
+      // Rolar em qualquer ponto da página conta como interação.
+      restart();
+
+      // Swipe horizontal do trackpad (Mac) sobre o arco: conduz a fita, como o arrasto.
+      // Sem isto o gesto sobra pro navegador, que o lê como "voltar" e sai da página.
+      // Fica restrito ao quadro do arco — no resto da página não há o que rolar de lado.
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) {
+        const drag = dragRef.current;
+        if (!drag || !(event.target instanceof Node) || !drag.contains(event.target)) return;
+        event.preventDefault();
+        const last = Math.max(0, live.current.frameCount - 1);
+        const raw = target.current + event.deltaX / WHEEL_PER_SLOT;
+        target.current = Math.min(last, Math.max(0, raw));
+        scheduleSnap();
+        loop();
+        return;
+      }
+
+      if (event.deltaY === 0) return;
       const goingDown = event.deltaY > 0;
       const last = Math.max(0, live.current.frameCount - 1);
 
@@ -156,16 +224,33 @@ export function useArcScrub({
       const atLast = goingDown && target.current >= last - 0.001;
       if (atFirst || atLast) return;
 
-      // Ainda sobra stage fora da tela na direção do gesto: scroll normal primeiro.
+      // Trava: com o stage entrando na tela na direção do gesto, a página ENCAIXA nele
+      // (centralizado no espaço abaixo do cabeçalho fixo) e fica parada; daí a rolagem só
+      // anda a fita, do primeiro ao último quadro, como uma peça única. As pontas acima
+      // devolvem o gesto — é assim que a página segue depois da última imagem.
       const rect = node.getBoundingClientRect();
-      if (
-        (goingDown && rect.bottom > window.innerHeight + 1) ||
-        (!goingDown && rect.top < -1)
-      ) {
-        return;
-      }
+      const viewport = window.innerHeight;
+      if (goingDown ? rect.top > viewport * 0.75 : rect.bottom < viewport * 0.25) return;
+      if (rect.bottom <= 0 || rect.top >= viewport) return;
 
       event.preventDefault();
+
+      const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 0;
+      const aligned = headerBottom + Math.max(0, (viewport - headerBottom - rect.height) / 2);
+      const offset = rect.top - aligned;
+      if (Math.abs(offset) > 2) {
+        // Durante o encaixe o wheel é engolido (inclusive a inércia do trackpad): é o que
+        // dá a sensação de a página "travar" na galeria em vez de passar direto por ela.
+        if (!aligning) {
+          aligning = true;
+          window.scrollTo({ top: window.scrollY + offset, behavior: "smooth" });
+          window.setTimeout(() => {
+            aligning = false;
+          }, ALIGN_MS);
+        }
+        return;
+      }
+      if (aligning) return;
 
       const raw = target.current + event.deltaY / WHEEL_PER_SLOT;
       target.current = Math.min(last, Math.max(0, raw));
@@ -190,6 +275,7 @@ export function useArcScrub({
       // Só o botão principal do mouse arrasta — direito/meio seguem livres para o menu
       // de contexto e outros usos. Touch e caneta não têm este conceito (`button` é 0).
       if (event.pointerType === "mouse" && event.button !== 0) return;
+      restart();
       // Suprime o drag-and-drop nativo de imagem que o mousedown dispararia por cima
       // deste gesto — sem isto o navegador arrasta um "fantasma" da mídia junto da fita.
       event.preventDefault();
@@ -206,6 +292,7 @@ export function useArcScrub({
 
     const onPointerMove = (event: PointerEvent) => {
       if (!dragging || !live.current.enabled || event.pointerId !== activePointerId) return;
+      restart();
 
       // Positivo = avança na fita: arrastar pra CIMA (como rolar a página pra baixo) ou
       // pra ESQUERDA (como empurrar o carrossel).
@@ -260,6 +347,9 @@ export function useArcScrub({
 
     return () => {
       window.removeEventListener("wheel", onWheel);
+      observer.disconnect();
+      window.removeEventListener("scroll", restart);
+      if (idleTimer != null) clearTimeout(idleTimer);
       drag?.removeEventListener("pointerdown", onPointerDown);
       drag?.removeEventListener("pointermove", onPointerMove);
       drag?.removeEventListener("pointerup", onPointerEnd);
@@ -277,6 +367,8 @@ export function useArcScrub({
   // o laço é exponencial, então uma seção adiante chega em ~0,3 s e a ponta oposta da fita
   // em ~0,9 s, sem precisar de um caminho separado (nem de um corte) para saltos longos.
   const goTo = useCallback((index: number) => {
+    // Clique na barra de seções ou num quadro: interação, então o autoplay espera de novo.
+    restartIdle.current();
     const last = Math.max(0, live.current.frameCount - 1);
     target.current = Math.min(last, Math.max(0, index));
     if (!live.current.enabled) {

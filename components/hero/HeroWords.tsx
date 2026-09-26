@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
 import type { Dictionary } from "@/lib/dictionaries";
+import { useIntroDone } from "@/lib/intro";
 
 const WORD_MS = 700;
 
@@ -17,12 +18,14 @@ export function HeroWords({ dict }: { dict: Dictionary }) {
   const reduceMotion = useReducedMotion();
   const [index, setIndex] = useState(0);
   const done = index >= words.length;
+  // As palavras só começam quando a logo da abertura pousa (IntroLogo).
+  const introDone = useIntroDone();
 
   useEffect(() => {
-    if (reduceMotion || done) return;
+    if (reduceMotion || done || !introDone) return;
     const timer = setTimeout(() => setIndex((i) => i + 1), WORD_MS);
     return () => clearTimeout(timer);
-  }, [index, done, reduceMotion]);
+  }, [index, done, reduceMotion, introDone]);
 
   if (reduceMotion) {
     return (
@@ -41,7 +44,7 @@ export function HeroWords({ dict }: { dict: Dictionary }) {
             entrada + saída consomem quase todo o WORD_MS e a tela fica vazia metade
             do tempo. Sobrepondo, o efeito vira corte rápido — que é o pedido do §2. */}
         <AnimatePresence>
-          {!done && (
+          {!done && introDone && (
             <motion.span
               key={words[index]}
               className="type-display absolute inset-0 block text-bone"

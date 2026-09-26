@@ -14,7 +14,7 @@ export const en: Dictionary = {
     back: "Back to home",
   },
   hero: {
-    words: ["EVENTS", "ANNIVERSARIES", "BRANDS", "PRODUCTS", "EXPERIENCES"],
+    words: ["EVENTS", "BIRTHDAYS", "BRANDS", "PRODUCTS", "EXPERIENCES"],
     signature: ["EXPERIENCES THAT LAST.", "BRANDS THAT GROW."],
     scrollHint: "Scroll to choose",
   },
@@ -87,13 +87,14 @@ export const en: Dictionary = {
     gallery: "Section gallery",
     showImage: "Show image {n}",
     openSite: "Open {host} in a new tab",
+    quoteCta: "Request a quote",
   },
   events: {
     eyebrow: "EVENTS",
     title: "EVENTS THAT BECOME MEMORIES.",
     intro:
-      "From the first brief to the last light going out, we handle every layer of your " +
-      "event — set design, sound, imagery and experience.",
+      "From the first brief until the last light goes out, we handle every layer of your " +
+      "event — set design, sound, photo & video, and experience.",
     formTypeLabel: "Event type",
     sections: {
       weddings: {
@@ -101,16 +102,16 @@ export const en: Dictionary = {
         eyebrow: "WEDDINGS",
         title: "The most important day, told the right way.",
         description:
-          "We plan and capture weddings from the first rehearsal to the last dance — set " +
-          "design, lighting, sound and an imagery team dedicated to missing nothing.",
+          "We plan and capture weddings from the engagement shoot to the last dance — set " +
+          "design, lighting, sound and a photo and video team dedicated to missing nothing.",
         cta: "Talk about my wedding",
       },
       socials: {
         navLabel: "Social",
-        eyebrow: "DEBUTANTE BALLS & BIRTHDAYS",
+        eyebrow: "QUINCEAÑERAS & BIRTHDAYS",
         title: "Celebrations with the FSB signature.",
         description:
-          "Debutante balls, birthdays and celebrations that deserve as much care as any " +
+          "Quinceañeras, birthdays and celebrations that deserve as much care as any " +
           "major production — from the invitation to the last toast.",
         cta: "Plan my celebration",
       },
@@ -130,17 +131,21 @@ export const en: Dictionary = {
         description:
           "Sound, lighting, LED walls, photography and filming under a single production, " +
           "so the event looks — and sounds — professional from start to finish.",
-        cta: "Build my production",
+        cta: "Plan my production",
       },
     },
   },
   company: {
     eyebrow: "COMPANY",
-    title: "IDEAS THAT BECOME BUSINESS.",
+    title: "IDEAS THAT BECOME BUSINESSES.",
     intro:
       "From visual identity to a product ready to sell: we combine creativity, " +
       "technology and production to help your brand grow.",
     formTypeLabel: "Project type",
+    highlights: [
+      "Ideas that become businesses",
+      "Brands with strategy and results",
+    ],
     sections: {
       branding: {
         navLabel: "Brand & Traffic",
@@ -155,11 +160,11 @@ export const en: Dictionary = {
       product: {
         navLabel: "Photo & Video",
         eyebrow: "PHOTOGRAPHY & VIDEO",
-        title: "Your product, your team and you, in image.",
+        title: "Your product, your team and you, on camera.",
         description:
           "Studio or on location: product photography for catalog and e-commerce, " +
-          "model shoots, positioning portraits for business owners and the record of " +
-          "your company's day to day.",
+          "model shoots, personal branding portraits for business owners and " +
+          "behind-the-scenes coverage of your company's day-to-day.",
         cta: "Book a shoot",
       },
       content: {
@@ -178,20 +183,25 @@ export const en: Dictionary = {
         description:
           "Websites, apps, Google Business Profile and the pages that make your company " +
           "findable — technology in service of the brand experience.",
-        cta: "Talk about technology",
+        cta: "Talk about my website or app",
       },
     },
   },
   form: {
     eyebrow: "Let's talk",
-    title: "Tell us what you want to create.",
+    title: "Get your quote — no strings attached.",
     name: "Name",
     namePlaceholder: "Your name",
-    date: "Event date",
+    date: "Preferred date",
+    phone: "Phone / WhatsApp",
+    phonePlaceholder: "+1 (407) 555-0123",
     email: "Email (optional)",
     emailPlaceholder: "you@email.com",
     details: "Details (optional)",
     detailsPlaceholder: "Guests, venue, budget — whatever's relevant.",
-    cta: "Talk on WhatsApp",
+    cta: "Request a quote",
+    sending: "Sending…",
+    success: "We got your request! Our team will reach out shortly.",
+    error: "We couldn't send it right now. Try again or message us on WhatsApp.",
   },
 };

@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowDown } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { PoolItem } from "@/content/media-pool";
@@ -15,6 +16,11 @@ import {
 } from "./UniverseMediaArc";
 import { textBlockExit, textLine } from "./stageMotion";
 import { UniverseSectionNav } from "./UniverseSectionNav";
+
+/** Tempo pra fita chegar à última imagem antes de a página descer ao formulário — o laço
+ *  de `useArcScrub` atravessa a fita inteira em ~0,9 s; aqui a descida já começa no fim
+ *  do glide, sem esperar o assentamento completo. */
+const QUOTE_SCROLL_DELAY_MS = 750;
 
 export type StageSection = {
   readonly slug: string;
@@ -102,86 +108,136 @@ export function UniverseStage({
   );
 
   return (
-    // O `ref` do wheel fica neste wrapper, e não na grade: é o retângulo dele que a guarda
-    // de `useArcScrub` mede para decidir entre mover a fita e devolver o scroll à página.
-    <div ref={stageRef}>
-      <div className="grid gap-12 md:grid-cols-[1fr_1.9fr] md:gap-14 lg:grid-cols-[1fr_2fr] lg:gap-16">
-        {/* `grid` com os dois blocos na MESMA célula (`gridArea: 1/1`) — não `absolute`:
-            empilhados assim, a célula mede o mais alto dos dois durante a sobreposição e
-            nunca colapsa a zero. Se colapsasse, a altura do stage mudaria no meio da troca
-            e a guarda de `useArcScrub` devolveria o scroll ao navegador — a página desceria
-            até o formulário. */}
-        <div className="grid">
-          {/* Sem `initial={false}`: a primeira seção também entra animada, no lugar do
-              `Reveal` que o bloco usava antes — e agora em cascata, junto com o arco. */}
-          <AnimatePresence>
-            {/* Só a SAÍDA vive no bloco (as três linhas partem juntas). A entrada é de
-                cada linha, com o atraso da cascata vindo de `textLine`. */}
-            <motion.div
-              key={active.slug}
-              style={{ gridArea: "1 / 1" }}
-              className="flex flex-col items-start gap-6"
-              {...blockExit}
-            >
-              <motion.p {...lines[0]} className="type-eyebrow text-electric">
-                {active.copy.eyebrow}
-              </motion.p>
-              <motion.h2
-                {...lines[1]}
-                className="type-display text-[clamp(2rem,3.6vw,2.75rem)] text-bone"
-              >
-                {active.copy.title}
-              </motion.h2>
-              <motion.p
-                {...lines[2]}
-                className="max-w-md text-balance text-sm leading-relaxed text-bone/65 md:text-base"
-              >
-                {active.copy.description}
-              </motion.p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+    <>
+    {/* O `ref` do wheel fica neste wrapper: é o retângulo dele que a guarda de
+        `useArcScrub` mede para decidir entre mover a fita e devolver o scroll à página.
+        Tudo empilhado e centralizado — seções no topo, o texto da seção, e a galeria. */}
+    <div ref={stageRef} className="flex flex-col items-center gap-6 md:gap-8">
+      {/* A nav é chrome permanente, fora do `AnimatePresence` abaixo: não pode remontar
+          (nem reanimar o sublinhado) a cada troca de seção. O sublinhado correndo de um
+          rótulo ao outro é o fio contínuo que costura a saída de uma seção à entrada da
+          outra. */}
+      <UniverseSectionNav
+        label={stage.sections}
+        sections={sections.map((section) => ({
+          slug: section.slug,
+          label: section.copy.navLabel,
+        }))}
+        activeIndex={sectionIndex}
+        onSelect={(target) => goTo(firstOf[target])}
+      />
 
-        <div className="flex flex-col gap-6">
-          {/* A nav é irmã do arco, e fora do `AnimatePresence` abaixo: ela é chrome
-              permanente e não pode remontar (nem reanimar o sublinhado) a cada troca
-              de seção. O sublinhado correndo de um rótulo ao outro é justamente o fio
-              contínuo que costura a saída de uma seção à entrada da outra. */}
-          <UniverseSectionNav
-            label={stage.sections}
-            sections={sections.map((section) => ({
-              slug: section.slug,
-              label: section.copy.navLabel,
-            }))}
-            activeIndex={sectionIndex}
-            onSelect={(target) => goTo(firstOf[target])}
-          />
-
-          {/* A caixa carrega a altura, o `--arc-base` e o recorte (ver `ARC_BOX`), e
-              hospeda o trilho junto do arco. Nada aqui remonta na troca de seção: é essa
-              permanência que faz a fita ser contínua. */}
-          {/* `touch-action: none`: o arrasto do dedo sobre o arco é nosso (ver o bloco de
-              pointer em `useArcScrub`). Sem isto o navegador começa a rolar a página antes
-              do primeiro `touchmove` e o gesto nunca chega ao carrossel. `cursor-grab` só
-              avisa quem usa mouse que o arco também se arrasta com o botão. */}
-          <div
-            ref={arcBoxRef}
-            className={`relative touch-none overflow-hidden cursor-grab active:cursor-grabbing ${ARC_BOX}`}
+      {/* `grid` com os dois blocos na MESMA célula (`gridArea: 1/1`) — não `absolute`:
+          empilhados assim, a célula mede o mais alto dos dois durante a sobreposição e
+          nunca colapsa a zero. Se colapsasse, a altura do stage mudaria no meio da troca
+          e a guarda de `useArcScrub` devolveria o scroll ao navegador. */}
+      <div className="grid w-full max-w-3xl">
+        {/* Sem `initial={false}`: a primeira seção também entra animada, em cascata. */}
+        <AnimatePresence>
+          {/* Só a SAÍDA vive no bloco (as três linhas partem juntas). A entrada é de
+              cada linha, com o atraso da cascata vindo de `textLine`. */}
+          <motion.div
+            key={active.slug}
+            style={{ gridArea: "1 / 1" }}
+            className="flex flex-col items-center gap-3 text-center md:gap-4"
+            {...blockExit}
           >
-            <ArcRail />
-
-            <UniverseMediaArc
-              ref={arcRef}
-              frames={frames}
-              activeIndex={frameIndex}
-              onSelect={goTo}
-              galleryLabel={stage.gallery}
-              imageLabel={stage.showImage}
-              openSiteLabel={stage.openSite}
-            />
-          </div>
-        </div>
+            <motion.p {...lines[0]} className="type-eyebrow text-electric">
+              {active.copy.eyebrow}
+            </motion.p>
+            {/* Mais compacto que na grade antiga: empilhado, o texto divide a altura da
+                tela com o arco (ver a reserva em `ARC_BOX`). */}
+            <motion.h2
+              {...lines[1]}
+              className="type-display text-balance text-[clamp(1.6rem,2.8vw,2.25rem)] text-bone"
+            >
+              {active.copy.title}
+            </motion.h2>
+            <motion.p
+              {...lines[2]}
+              className="max-w-2xl text-balance text-sm leading-relaxed text-bone/65 md:text-base"
+            >
+              {active.copy.description}
+            </motion.p>
+          </motion.div>
+        </AnimatePresence>
       </div>
+
+      {/* A caixa carrega a altura, o `--arc-base` e o recorte (ver `ARC_BOX`), e hospeda
+          o trilho junto do arco. Nada aqui remonta na troca de seção: é essa permanência
+          que faz a fita ser contínua. `touch-action: none`: o arrasto do dedo sobre o arco
+          é nosso (ver `useArcScrub`); sem isto o navegador rola a página antes do primeiro
+          `touchmove`. `cursor-grab` avisa quem usa mouse que o arco também se arrasta. */}
+      <div
+        ref={arcBoxRef}
+        className={`relative w-full touch-none overflow-hidden cursor-grab active:cursor-grabbing ${ARC_BOX}`}
+      >
+        <ArcRail />
+
+        <UniverseMediaArc
+          ref={arcRef}
+          frames={frames}
+          activeIndex={frameIndex}
+          onSelect={goTo}
+          galleryLabel={stage.gallery}
+          imageLabel={stage.showImage}
+          openSiteLabel={stage.openSite}
+        />
+      </div>
+      {/* "Solicitar orçamento" logo abaixo da galeria, DENTRO do `stageRef`: a trava do
+          wheel encaixa a página no stage inteiro, então galeria e botão ficam juntos na
+          tela enquanto a fita anda (a reserva de altura em `ARC_BOX` já conta com ele).
+          Entra subindo e crescendo ao aparecer; a seta balança pra baixo, apontando o
+          formulário. O clique leva a fita até a última imagem e desce pro formulário; sem
+          JS, o `href` já faz o salto. */}
+      {/* A entrada (subir + crescer) vive no wrapper; o halo é IRMÃO do botão, atrás dele
+          — dentro do botão, um filho com z negativo pinta por cima do próprio fundo e o
+          reinício de cada ciclo aparecia como uma piscada. O ciclo do halo começa e
+          termina invisível, então o recomeço não se vê. O hover também é do motion: uma
+          transição de CSS em `transform` brigaria com o `transform` que ele escreve. */}
+      <motion.div
+        className="relative inline-flex"
+        initial={reduce ? false : { opacity: 0, y: 28, scale: 0.9 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={{ once: true, amount: 0.8 }}
+        transition={{ type: "spring", stiffness: 180, damping: 18, delay: 0.15 }}
+      >
+        {!reduce && (
+          <motion.span
+            aria-hidden
+            className="pointer-events-none absolute inset-0 rounded-full bg-electric"
+            animate={{ scale: [1, 1.22], opacity: [0, 0.45, 0] }}
+            transition={{ duration: 2, times: [0, 0.25, 1], repeat: Infinity, ease: "easeOut" }}
+          />
+        )}
+        <motion.a
+          href="#orcamento"
+          onClick={(event) => {
+            event.preventDefault();
+            goTo(frames.length - 1);
+            const form = document.getElementById("orcamento");
+            if (!form) return;
+            window.setTimeout(
+              () => form.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }),
+              reduce ? 0 : QUOTE_SCROLL_DELAY_MS,
+            );
+          }}
+          whileHover={reduce ? undefined : { scale: 1.03 }}
+          transition={{ duration: 0.25 }}
+          className="relative z-10 inline-flex items-center gap-2 whitespace-nowrap rounded-full border border-white/25 bg-electric px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-white shadow-[0_0_0_1px_rgb(23_67_244/0.6),0_20px_50px_-10px_rgb(23_67_244/0.95)] transition-[background-color,box-shadow] duration-300 hover:bg-[#2a55ff] hover:shadow-[0_0_0_1px_rgb(23_67_244/0.8),0_24px_60px_-8px_rgb(23_67_244/1)] md:px-6 md:py-3 md:text-sm"
+        >
+          {stage.quoteCta}
+          <motion.span
+            aria-hidden
+            className="inline-flex"
+            animate={reduce ? undefined : { y: [0, 3, 0] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ArrowDown className="h-3.5 w-3.5" strokeWidth={2.25} />
+          </motion.span>
+        </motion.a>
+      </motion.div>
     </div>
+    </>
   );
 }

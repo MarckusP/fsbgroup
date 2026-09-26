@@ -88,6 +88,7 @@ export const pt: Dictionary = {
     gallery: "Galeria da seção",
     showImage: "Ver imagem {n}",
     openSite: "Abrir {host} em uma nova aba",
+    quoteCta: "Solicitar orçamento",
   },
   events: {
     eyebrow: "EVENTS",
@@ -142,6 +143,10 @@ export const pt: Dictionary = {
       "Da identidade visual ao produto pronto para vender: unimos criatividade, " +
       "tecnologia e produção para fazer sua marca crescer.",
     formTypeLabel: "Tipo de projeto",
+    highlights: [
+      "Ideias que se tornam negócios",
+      "Marcas com estratégias e resultados",
+    ],
     sections: {
       branding: {
         navLabel: "Marca & Tráfego",
@@ -185,14 +190,19 @@ export const pt: Dictionary = {
   },
   form: {
     eyebrow: "Vamos conversar",
-    title: "Conte pra gente o que você quer criar.",
+    title: "Receba seu orçamento sem compromisso.",
     name: "Nome",
     namePlaceholder: "Seu nome",
-    date: "Data do evento",
+    date: "Data desejada",
+    phone: "Telefone / WhatsApp",
+    phonePlaceholder: "+55 11 99999-9999",
     email: "E-mail (opcional)",
     emailPlaceholder: "seu@email.com",
     details: "Detalhes (opcional)",
     detailsPlaceholder: "Convidados, local, orçamento — o que for relevante.",
-    cta: "Falar no WhatsApp",
+    cta: "Solicitar orçamento",
+    sending: "Enviando…",
+    success: "Recebemos seu pedido! Nossa equipe entra em contato em breve.",
+    error: "Não foi possível enviar agora. Tente de novo ou fale com a gente no WhatsApp.",
   },
 };

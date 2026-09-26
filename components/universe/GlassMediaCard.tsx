@@ -45,7 +45,7 @@ function sizeOf(item: PoolItem) {
  * quadro que está sendo olhado de perto.
  *
  * É `memo`: durante um movimento da fita o índice em destaque muda a cada quadro que passa
- * pelo centro, e sem isso os ~32 cards re-renderizariam a cada um deles. Por isso as props
+ * pelo centro, e sem isso os ~20 cards re-renderizariam a cada um deles. Por isso as props
  * são todas estáveis — `onSelect` recebe o `index` em vez de um arrow por card, o `site`
  * é derivado aqui dentro em vez de vir pronto de fora, e o `ref` vem de uma lista fixa.
  *
@@ -79,7 +79,7 @@ export const GlassMediaCard = memo(function GlassMediaCard({
   /** Está dentro da janela visível do arco — define foco e leitura por assistivos. */
   reachable: boolean;
   /** Está perto o bastante do destaque para valer a pena baixar a mídia. A fita inteira
-   *  fica montada, então sem isto o navegador buscaria os ~36 posters de uma vez. */
+   *  fica montada, então sem isto o navegador buscaria os ~20 posters de uma vez. */
   loadMedia?: boolean;
   eager?: boolean;
   /** Atraso da cascata de entrada do arco, em ms — ver `.arc-card-in` no globals.css. */
