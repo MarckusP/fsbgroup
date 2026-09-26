@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Archivo, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { notFound } from "next/navigation";
 import { site } from "@/content/site";
 import {
@@ -11,16 +11,23 @@ import {
 } from "@/lib/dictionaries";
 import "../globals.css";
 
-const archivo = Archivo({
+// Fontes hospedadas com o site (pacotes @fontsource-variable), não baixadas do Google no
+// build: para fontes com eixo de largura, como a Archivo, o Google às vezes responde com
+// URLs `/l/font?kit=…&skey=…`, e o `&` quebra o `next/font/google` no Turbopack ("queries
+// have exactly one entry") — o deploy no GitHub Pages falhava por isso, enquanto o build
+// local passava. Arquivos locais deixam o build determinístico e sem depender da rede.
+// Subconjunto latino (cobre os acentos de pt e es), peso variável — o mesmo de antes.
+const archivo = localFont({
+  src: "../../node_modules/@fontsource-variable/archivo/files/archivo-latin-wght-normal.woff2",
   variable: "--font-archivo",
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+  weight: "100 900",
   display: "swap",
 });
 
-const inter = Inter({
+const inter = localFont({
+  src: "../../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
   variable: "--font-inter",
-  subsets: ["latin"],
+  weight: "100 900",
   display: "swap",
 });
 
