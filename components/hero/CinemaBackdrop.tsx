@@ -1,12 +1,18 @@
 "use client";
 
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import {
+  motion,
+  useMotionValueEvent,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+} from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { heroMedia } from "@/content/site";
 import type { Dictionary } from "@/lib/dictionaries";
 import { useViewportHeight } from "@/hooks/useViewportHeight";
 import { useIntroDone } from "@/lib/intro";
-import { HeroPlayTrigger } from "./SoundToggle";
+import { HeroPlayTrigger, HeroSoundButton } from "./SoundToggle";
 
 /**
  * O vídeo de fundo do hero (§1/§7) — toca em loop desde o primeiro frame, sem
@@ -17,6 +23,11 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [canPlay, setCanPlay] = useState(false);
   const [forcePlay, setForcePlay] = useState(false);
+  const [muted, setMuted] = useState(true);
+  // O hero saiu de cena (vídeo com opacidade 0): o som não pode continuar tocando.
+  const [offStage, setOffStage] = useState(false);
+  // Preferência da pessoa — devolvida ao vídeo quando o hero volta à tela.
+  const soundPreferred = useRef(true);
   const reduceMotion = useReducedMotion();
 
   // Com movimento reduzido, o vídeo só carrega se a pessoa pedir pelo botão.
@@ -38,6 +49,23 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
     [brightness, blur],
     ([b, px]: number[]) => `brightness(${b}) blur(${px}px)`,
   );
+
+  useMotionValueEvent(scrollY, "change", (y) => setOffStage(y > vh * 2.6));
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (offStage) video.muted = true;
+    else if (soundPreferred.current) video.muted = false;
+  }, [offStage]);
+
+  const toggleSound = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    soundPreferred.current = video.muted;
+    video.muted = !video.muted;
+    void video.play().catch(() => undefined);
+  };
 
   // Só carrega o vídeo depois de saber o viewport: a versão mobile é 9:16 e pesa 1/3.
   // Até lá o poster (já no HTML) segura a tela, então não há salto visual.
@@ -62,7 +90,31 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
     }
     video.preload = "auto";
     video.load();
-    void video.play().catch(() => undefined);
+
+    // Tenta tocar já com som. Navegadores só liberam áudio automático se o usuário já
+    // interagiu com o site (ou se o site tem alto engajamento); senão o play() é recusado
+    // e caímos para mudo, ligando o som na primeira interação real (clique, toque, tecla —
+    // scroll sozinho não conta como gesto).
+    const events = ["pointerdown", "keydown", "touchend", "click"] as const;
+    const unmute = (event: Event) => {
+      // O botão de som cuida do próprio toggle; senão o pointerdown liga e o click desliga.
+      if ((event.target as Element | null)?.closest?.("[data-hero-sound]")) return;
+      video.muted = false;
+      void video.play().catch(() => undefined);
+      removeListeners();
+    };
+    const removeListeners = () => {
+      for (const name of events) window.removeEventListener(name, unmute);
+    };
+
+    video.muted = false;
+    video.play().catch(() => {
+      video.muted = true;
+      void video.play().catch(() => undefined);
+      for (const name of events) window.addEventListener(name, unmute, { once: true });
+    });
+
+    return removeListeners;
   }, [wantsVideo]);
 
   return (
@@ -88,11 +140,14 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
 
           <video
             ref={videoRef}
-            muted
             loop
             playsInline
             preload="none"
-            onCanPlay={() => setCanPlay(true)}
+            onCanPlay={(event) => {
+              setCanPlay(true);
+              setMuted(event.currentTarget.muted);
+            }}
+            onVolumeChange={(event) => setMuted(event.currentTarget.muted)}
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
               canPlay ? "opacity-100" : "opacity-0"
             }`}
@@ -105,6 +160,13 @@ export function CinemaBackdrop({ dict }: { dict: Dictionary }) {
           <div className="absolute inset-0 bg-gradient-to-b from-midnight-deep/70 via-midnight/40 to-midnight-deep" />
         </div>
       </motion.div>
+
+      <HeroSoundButton
+        dict={dict}
+        muted={muted}
+        visible={canPlay && !offStage}
+        onToggle={toggleSound}
+      />
 
       <HeroPlayTrigger
         dict={dict}

@@ -38,6 +38,8 @@ export const en: Dictionary = {
     eyebrow: "FSB",
     title: "IDEAS THAT BECOME EXPERIENCES.",
     play: "Play the brand film",
+    mute: "Mute video",
+    unmute: "Turn video sound on",
   },
   vision: {
     eyebrow: "The FSB vision",

@@ -15,6 +15,8 @@ const NATIVE_NAMES: Record<Locale, string> = {
 
 /** Chave usada para lembrar a escolha do usuário entre visitas (ver public/index.html). */
 const STORAGE_KEY = "fsb-locale";
+/** Posição de rolagem guardada antes da troca de idioma, restaurada após a navegação. */
+const SCROLL_KEY = "fsb-locale-scroll";
 
 /**
  * Seletor de idioma: um botão com ícone de globo + código atual, que abre um menu
@@ -59,8 +61,35 @@ export function LocaleSwitcher({
     };
   }, [open]);
 
+  // Depois da troca de idioma, devolve a página à posição de rolagem em que estava.
+  useEffect(() => {
+    let saved: string | null = null;
+    try {
+      saved = sessionStorage.getItem(SCROLL_KEY);
+      sessionStorage.removeItem(SCROLL_KEY);
+    } catch {
+      return;
+    }
+    if (saved === null) return;
+    const y = Number(saved);
+    // Reaplica por alguns frames: o conteúdo novo pode mudar de altura ao hidratar.
+    let frames = 0;
+    let raf = 0;
+    const restore = () => {
+      window.scrollTo(0, y);
+      if (++frames < 10) raf = requestAnimationFrame(restore);
+    };
+    restore();
+    return () => cancelAnimationFrame(raf);
+  }, [pathname]);
+
   const handleSelect = (locale: Locale) => {
     setOpen(false);
+    try {
+      sessionStorage.setItem(SCROLL_KEY, String(window.scrollY));
+    } catch {
+      // sem sessionStorage, o scroll={false} do Link ainda tenta manter a posição.
+    }
     try {
       localStorage.setItem(STORAGE_KEY, locale);
     } catch {
@@ -98,6 +127,7 @@ export function LocaleSwitcher({
               <Link
                 href={hrefFor(locale)}
                 hrefLang={locale}
+                scroll={false}
                 aria-current={locale === current ? "true" : undefined}
                 onClick={() => handleSelect(locale)}
                 className={`block px-3.5 py-2 text-xs uppercase tracking-wide transition-colors ${

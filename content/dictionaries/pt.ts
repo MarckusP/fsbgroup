@@ -39,6 +39,8 @@ export const pt: Dictionary = {
     eyebrow: "FSB",
     title: "IDEIAS QUE SE TORNAM EXPERIÊNCIAS.",
     play: "Reproduzir o filme institucional",
+    mute: "Silenciar o vídeo",
+    unmute: "Ligar o som do vídeo",
   },
   vision: {
     eyebrow: "A visão FSB",

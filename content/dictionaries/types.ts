@@ -78,6 +78,8 @@ export type Dictionary = {
     readonly eyebrow: string;
     readonly title: string;
     readonly play: string;
+    readonly mute: string;
+    readonly unmute: string;
   };
   readonly vision: {
     readonly eyebrow: string;
