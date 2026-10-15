@@ -37,7 +37,7 @@ export const site = {
   leadsEndpoint: "https://fsb-notion-leads.notion-leads.workers.dev" as string,
 
   socials: [
-    { id: "instagram", label: "Instagram", href: "https://instagram.com/fsbproduction" }, // TODO
+    { id: "instagram", label: "Instagram", href: "https://instagram.com/fsbproduction.official" },
     { id: "youtube", label: "YouTube", href: "https://youtube.com/@fsbproduction" }, // TODO
     { id: "linkedin", label: "LinkedIn", href: "https://linkedin.com/company/fsbproduction" }, // TODO
     { id: "tiktok", label: "TikTok", href: "https://tiktok.com/@fsbproduction" }, // TODO
